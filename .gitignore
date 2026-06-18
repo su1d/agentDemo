@@ -1,0 +1,24 @@
+﻿# Java
+backend/target/
+*.class
+*.jar
+*.war
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Node
+frontend/node_modules/
+frontend/dist/
+
+# Logs
+outputs/
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.iml
+.DS_Store
