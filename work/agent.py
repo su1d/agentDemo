@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """LangGraph Agent - 多智能体基类，支持按角色创建不同专长的 Agent"""
 import os, re, json
 from typing import Dict, Any, List, Optional
@@ -120,98 +120,100 @@ def create_llm():
 def _mock(user_input, iteration, tools_dict):
     if iteration >= 3:
         return "FINAL: 推理结束（模拟模式）"
-    if iteration >= 1:
-        return "ANSWER: 结果已处理完成。（模拟回复）"
-    # 尝试匹配工具
-    for tname, tinfo in tools_dict.items():
-        if tname == "calculator":
-            if any(op in user_input for op in ["+", "-", "*", "/", "calc", "计算"]):
-                nums = re.findall(r"[\d+\-*/().]", user_input)
-                expr = "".join(nums).strip("+-*/.")
-                if expr:
-                    return "TOOL: calculator | " + expr
-        if tname == "get_weather":
-            if "上海" in user_input or "shanghai" in user_input:
-                return "TOOL: get_weather | Shanghai"
-        if tname == "search_info":
-            if "搜索" in user_input or "查找" in user_input or "什么是" in user_input:
-                keyword = user_input.replace("搜索", "").replace("查找", "").replace("什么是", "").strip()
-                if keyword:
-                    return "TOOL: search_info | " + keyword
-        if tname == "summarize":
-            if "总结" in user_input or "归纳" in user_input:
-                return "TOOL: summarize | " + user_input
-    return "ANSWER: 关于 " + user_input + "，好问题！（模拟回复）"
+    prompt = user_input.lower()
+    for name, tinfo in tools_dict.items():
+        desc = tinfo["desc"].lower()
+        if any(kw in prompt for kw in desc.split()):
+            sample_input = user_input
+            for kw in ["计算", "加", "减", "乘", "除", "天气", "搜索", "总结"]:
+                if kw in prompt:
+                    break
+            result = tinfo["func"](sample_input)
+            return "TOOL_CALL: " + name + " | " + sample_input + " -> " + result
+    return "ANSWER: 您好！我是 " + (list(tools_dict.values())[0]["desc"] if tools_dict else "通用助手") + "。请问有什么可以帮助您的？"
 
-# ========== 构建 Agent 图 ==========
+# ========== Graph Node 函数 ==========
 
-def build_agent_graph(role_config):
-    """根据角色配置构建 LangGraph"""
-    tools_dict = role_config["tools"]
-    system_prompt = role_config["system_prompt"]
+def node_input(state_dict):
+    s = dict_to_state(state_dict)
+    return state_to_dict(s)
 
-    def node_input(sd):
+def node_llm_reason(state_dict):
+    s = dict_to_state(state_dict)
+    user_msg = s.messages[-1]["content"] if s.messages else ""
+    tools_dict = {}
+    # will be set by build_agent_graph via closure
+    return state_to_dict(s)
+
+def node_use_tool(state_dict):
+    s = dict_to_state(state_dict)
+    return state_to_dict(s)
+
+def node_output(state_dict):
+    s = dict_to_state(state_dict)
+    return state_to_dict(s)
+
+# ========== 构建 Agent Graph ==========
+
+def build_agent_graph(config):
+    tools_dict = config["tools"]
+
+    def node_llm_reason_with_tools(sd):
         s = dict_to_state(sd)
-        msg = s.messages[-1]["content"]
-        # print suppressed
-        s.iteration = 0
-        return state_to_dict(s)
-
-    def node_llm_reason(sd):
-        s = dict_to_state(sd)
+        user_msg = s.messages[-1]["content"] if s.messages else ""
         llm = create_llm()
-        msgs = [{"role": "system", "content": system_prompt}]
-        for m in s.messages:
-            msgs.append(m)
-        if s.tool_result:
-            msgs.append({"role": "system", "content": "工具 " + s.tool_name + " 返回: " + s.tool_result})
-            s.tool_result = ""
-            s.tool_name = ""
-        # print suppressed
-        user_input = s.messages[-1]["content"]
-        if llm:
-            content = llm.invoke(msgs).content.strip()
-        else:
-            content = _mock(user_input, s.iteration, tools_dict)
-        pass # print suppressed
-        u = content.upper()
-        if u.startswith("TOOL:"):
-            s.next_action = "use_tool"
-            rest = content[5:].strip()
-            if "|" in rest:
-                parts = rest.split("|", 1)
-                s.tool_name = parts[0].strip()
-                s.tool_input = parts[1].strip()
-            else:
-                parts = rest.split(None, 1)
-                s.tool_name = parts[0] if parts else ""
-                s.tool_input = parts[1] if len(parts) > 1 else ""
-        elif u.startswith("FINAL:"):
-            s.next_action = "end"
-            s.final_answer = content[6:].strip()
-        else:
-            if u.startswith("ANSWER:"):
-                ans = content[7:].strip()
-            else:
-                ans = content
-            s.messages.append({"role": "assistant", "content": ans})
-            s.next_action = "end"
-            s.final_answer = ans
-        return state_to_dict(s)
 
-    def node_use_tool(sd):
-        s = dict_to_state(sd)
-        # print suppressed
-        func = tools_dict.get(s.tool_name, {}).get("func", lambda x: "未知工具: " + x)
-        result = func(s.tool_input)
-        # print suppressed
-        s.tool_result = result
+        if llm:
+            system_prompt = config["system_prompt"]
+            msgs = [{"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_msg}]
+            response = llm.invoke(msgs)
+            content = response.content.strip()
+
+            tool_call_pattern = r"TOOL:\s*(\w+)\s*\|\s*(.+)"
+            match = re.search(tool_call_pattern, content, re.DOTALL)
+            if match:
+                s.next_action = "use_tool"
+                s.tool_name = match.group(1).strip()
+                s.tool_input = match.group(2).strip()
+            else:
+                s.next_action = "answer"
+                s.final_answer = re.sub(r"^ANSWER:\s*", "", content)
+        else:
+            result = _mock(user_msg, s.iteration, tools_dict)
+            if result.startswith("TOOL_CALL:"):
+                parts = result[len("TOOL_CALL:"):].split("->", 1)
+                call_part = parts[0].strip()
+                call_parts = call_part.split("|", 1)
+                s.tool_name = call_parts[0].strip()
+                s.tool_input = call_parts[1].strip() if len(call_parts) > 1 else ""
+                s.next_action = "use_tool"
+                if len(parts) > 1:
+                    s.tool_result = parts[1].strip()
+            else:
+                s.next_action = "answer"
+                s.final_answer = result.replace("ANSWER: ", "")
+
         s.iteration += 1
         return state_to_dict(s)
 
-    def node_output(sd):
+    def node_use_tool_with_tools(sd):
         s = dict_to_state(sd)
-        # print suppressed
+        tool_func = tools_dict.get(s.tool_name, {}).get("func")
+        if tool_func:
+            try:
+                result = tool_func(s.tool_input)
+                s.tool_result = str(result)
+            except Exception as e:
+                s.tool_result = "工具调用失败: " + str(e)
+        else:
+            s.tool_result = "未知工具: " + s.tool_name
+        s.messages.append({"role": "assistant", "content": s.tool_result})
+        return state_to_dict(s)
+
+    def node_output_with_tools(sd):
+        s = dict_to_state(sd)
+        s.final_answer = s.final_answer or s.tool_result or "无法生成回答"
         return state_to_dict(s)
 
     def route_after_llm(sd):
@@ -229,9 +231,9 @@ def build_agent_graph(role_config):
 
     w = Graph()
     w.add_node("input", node_input)
-    w.add_node("llm_reason", node_llm_reason)
-    w.add_node("use_tool", node_use_tool)
-    w.add_node("output", node_output)
+    w.add_node("llm_reason", node_llm_reason_with_tools)
+    w.add_node("use_tool", node_use_tool_with_tools)
+    w.add_node("output", node_output_with_tools)
     w.set_entry_point("input")
     w.add_edge("input", "llm_reason")
     w.add_conditional_edges("llm_reason", route_after_llm,
@@ -270,13 +272,12 @@ class LangGraphAgent:
 class OrchestratorAgent:
     """
     编排器：接收用户问题 → 判断用哪个 Agent → 调用 → 返回结果
+    支持多种协作模式：自动路由、链式编排、并行、辩论、批评链、投票共识、头脑风暴
     """
     def __init__(self):
         self.agents = {}
-        # 创建所有角色的 Agent 实例
         for role in ROLE_CONFIGS:
             self.agents[role] = LangGraphAgent(role)
-        # 编排器本身的 LLM（用来做路由判断）
         self.llm = create_llm()
 
     def list_agents(self):
@@ -285,9 +286,7 @@ class OrchestratorAgent:
     def route(self, user_input):
         """判断应该用哪个 Agent"""
         if not self.llm:
-            # 模拟模式：关键词匹配
             return self._mock_route(user_input)
-        # 真实模式：让 LLM 判断
         prompt = (
             "你是一个任务路由助手。根据用户输入，选择最合适的 Agent。可选角色：\n"
             + "\n".join([f"- {r}: {c['description']}" for r, c in ROLE_CONFIGS.items()])
@@ -303,8 +302,7 @@ class OrchestratorAgent:
         if any(op in u for op in ["+", "-", "*", "/", "计算", "等于"]):
             return "calculator"
         if "天气" in u or "温度" in u or "weather" in u:
-            if "上海" in u or "shanghai" in u:
-                return "weather"
+            return "weather"
         if "搜索" in u or "查找" in u or "什么是" in u or "介绍" in u:
             return "searcher"
         if "总结" in u or "归纳" in u:
@@ -326,7 +324,7 @@ class OrchestratorAgent:
 
     def orchestrate(self, user_input, roles=None):
         """
-        编排模式：指定 Agent 链，前一个输出作为下一个输入
+        链式编排模式：指定 Agent 链，前一个输出作为下一个输入
         roles: ["calculator", "summarizer"] 等
         """
         if not roles:
@@ -334,12 +332,168 @@ class OrchestratorAgent:
         current_input = user_input
         chain_results = []
         for role in roles:
-            pass # print suppressed
             reply = self.agents[role].run(current_input)
             chain_results.append({"role": role, "name": ROLE_CONFIGS[role]["name"], "reply": reply})
             current_input = reply
         return chain_results
 
+    # ========== 高级协作模式 ==========
+
+    def parallel_call(self, user_input, roles=None):
+        """
+        并行模式：多个 Agent 同时处理同一问题，收集所有结果后汇总
+        roles: ["calculator", "searcher"] 等
+        """
+        if not roles:
+            roles = list(self.agents.keys())
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+        results = {}
+        with ThreadPoolExecutor(max_workers=len(roles)) as executor:
+            future_map = {executor.submit(self.agents[r].run, user_input): r for r in roles}
+            for future in as_completed(future_map):
+                role = future_map[future]
+                try:
+                    reply = future.result()
+                except Exception as e:
+                    reply = f"错误: {e}"
+                results[role] = {"name": ROLE_CONFIGS[role]["name"], "reply": reply}
+
+        summary_input = f"原始问题: {user_input}\n\n各Agent回复:\n"
+        for role, data in results.items():
+            summary_input += f"\n[{data['name']}]: {data['reply']}\n"
+        summary_input += "\n请整合以上所有回复，给出一个统一的综合答案。"
+        summary = self.agents["summarizer"].run(summary_input)
+        return {
+            "mode": "parallel",
+            "individual_results": results,
+            "summary": summary
+        }
+
+    def debate(self, user_input, roles=None, rounds=2):
+        """
+        辩论模式：多个 Agent 轮流发表观点、互相反驳，最后由总结 Agent 给出最终结论
+        roles: 参与辩论的 Agent 角色列表（至少2个）
+        rounds: 辩论轮数
+        """
+        if not roles or len(roles) < 2:
+            roles = ["searcher", "calculator"]
+        round_history = []
+        for rnd in range(rounds):
+            round_results = {}
+            for role in roles:
+                if rnd == 0:
+                    prompt = f"请从你专业的角度分析以下问题，给出你的观点:\n{user_input}"
+                else:
+                    others_view = "\n".join(
+                        [f"{ROLE_CONFIGS[r]['name']}: {round_results.get(r, {}).get('reply', '')}"
+                         for r in roles if r != role]
+                    )
+                    prompt = (f"问题: {user_input}\n\n"
+                              f"其他专家的观点:\n{others_view}\n\n"
+                              f"请基于以上信息，进一步阐述或反驳，完善你的观点。")
+                reply = self.agents[role].run(prompt)
+                round_results[role] = {"name": ROLE_CONFIGS[role]["name"], "reply": reply}
+            round_history.append({"round": rnd + 1, "results": round_results})
+
+        debate_summary = f"问题: {user_input}\n\n辩论记录:\n"
+        for rnd_data in round_history:
+            debate_summary += f"\n--- 第{rnd_data['round']}轮 ---\n"
+            for role, data in rnd_data["results"].items():
+                debate_summary += f"[{data['name']}]: {data['reply']}\n"
+        debate_summary += "\n请综合所有辩论内容，给出最终结论。"
+        conclusion = self.agents["summarizer"].run(debate_summary)
+        return {
+            "mode": "debate",
+            "rounds": round_history,
+            "conclusion": conclusion
+        }
+
+    def critique_chain(self, user_input, generate_role="searcher", critique_role="summarizer", refine_rounds=2):
+        """
+        批评链模式：Agent A 生成 → Agent B 批评 → Agent A 改进（可多轮）
+        generate_role: 负责生成的 Agent
+        critique_role: 负责批评的 Agent
+        refine_rounds: 改进轮数
+        """
+        generate_agent = self.agents[generate_role]
+        critique_agent = self.agents[critique_role]
+        gen_name = ROLE_CONFIGS[generate_role]["name"]
+        crit_name = ROLE_CONFIGS[critique_role]["name"]
+
+        current_output = generate_agent.run(f"请针对以下问题进行详细分析:\n{user_input}")
+        history = [{"step": "生成", "role": generate_role, "name": gen_name, "content": current_output}]
+
+        for rnd in range(refine_rounds):
+            critique_prompt = (f"原始问题: {user_input}\n\n"
+                               f"生成的回答:\n{current_output}\n\n"
+                               f"请批评以上回答，指出不足、遗漏或错误之处，"
+                               f"并给出具体的改进建议。")
+            critique = critique_agent.run(critique_prompt)
+            history.append({"step": f"批评#{rnd+1}", "role": critique_role, "name": crit_name, "content": critique})
+
+            refine_prompt = (f"原始问题: {user_input}\n\n"
+                             f"你之前的回答:\n{current_output}\n\n"
+                             f"收到的批评意见:\n{critique}\n\n"
+                             f"请根据批评意见改进你的回答，输出最终版本。")
+            current_output = generate_agent.run(refine_prompt)
+            history.append({"step": f"改进#{rnd+1}", "role": generate_role, "name": gen_name, "content": current_output})
+
+        return {
+            "mode": "critique_chain",
+            "history": history,
+            "final_answer": current_output
+        }
+
+    def voting_consensus(self, user_input, roles=None):
+        """
+        投票/共识模式：多个 Agent 各自产生方案，然后汇总评估选出最佳
+        """
+        if not roles:
+            roles = [r for r in self.agents.keys() if r != "summarizer"]
+        proposals = {}
+        for role in roles:
+            reply = self.agents[role].run(
+                f"请针对以下问题提出你的解决方案:\n{user_input}"
+            )
+            proposals[role] = {"name": ROLE_CONFIGS[role]["name"], "proposal": reply}
+
+        eval_input = f"问题: {user_input}\n\n各Agent方案:\n"
+        for role, data in proposals.items():
+            eval_input += f"\n--- [{data['name']}] ---\n{data['proposal']}\n"
+        eval_input += ("\n请评估以上所有方案，从准确性、完整性、实用性等角度打分（1-10分），"
+                       "选出最佳方案，并说明理由。")
+        evaluation = self.agents["summarizer"].run(eval_input)
+
+        return {
+            "mode": "voting_consensus",
+            "proposals": proposals,
+            "evaluation": evaluation
+        }
+
+    def brainstorm(self, user_input, roles=None):
+        """
+        头脑风暴模式：所有 Agent 自由发挥，然后归类整理
+        """
+        if not roles:
+            roles = list(self.agents.keys())
+        ideas = {}
+        for role in roles:
+            reply = self.agents[role].run(
+                f"请针对以下主题进行头脑风暴，从你的专业角度提出尽可能多的想法、创意或建议:\n{user_input}"
+            )
+            ideas[role] = {"name": ROLE_CONFIGS[role]["name"], "ideas": reply}
+
+        organize_input = "头脑风暴主题: " + user_input + "\n\n收集到的想法:\n"
+        for role, data in ideas.items():
+            organize_input += f"\n--- [{data['name']}] ---\n{data['ideas']}\n"
+        organize_input += "\n请将以上所有想法进行归类、整理，去重合并，形成一个结构化的头脑风暴报告。"
+        organized = self.agents["summarizer"].run(organize_input)
+
+        return {
+            "mode": "brainstorm",
+            "ideas": ideas,
+            "organized_report": organized
+        }
+
 if __name__ == "__main__":
-    # 服务器模式 - 不运行交互测试
     pass

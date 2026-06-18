@@ -19,21 +19,69 @@ public class AgentController {
     }
 
     /**
-     * 聊天入口：自动路由到最合适的 Agent
+     * 统一协作入口：根据 action 参数路由到不同的协作模式
      */
     @PostMapping("/chat")
     public ChatResponse chat(@RequestBody ChatRequest request) {
         try {
-            String reply = manager.chat(request.getMessage());
-            return new ChatResponse(reply);
+            String message = request.getMessage();
+            String action = request.getAction() != null ? request.getAction() : "chat";
+
+            return switch (action) {
+                case "orchestrate" -> {
+                    List<String> roles = request.getRoles();
+                    if (roles == null) roles = List.of("calculator", "summarizer");
+                    String reply = manager.orchestrate(message, roles);
+                    yield new ChatResponse(reply, "orchestrate", null);
+                }
+                case "parallel" -> {
+                    List<String> roles = request.getRoles();
+                    String reply = manager.parallelCall(message, roles);
+                    yield new ChatResponse(reply, "parallel", null);
+                }
+                case "debate" -> {
+                    List<String> roles = request.getRoles();
+                    int rounds = request.getRounds() != null ? request.getRounds() : 2;
+                    String reply = manager.debate(message, roles, rounds);
+                    yield new ChatResponse(reply, "debate", null);
+                }
+                case "critique_chain" -> {
+                    String genRole = request.getGenerateRole() != null ? request.getGenerateRole() : "searcher";
+                    String critRole = request.getCritiqueRole() != null ? request.getCritiqueRole() : "summarizer";
+                    int refine = request.getRefineRounds() != null ? request.getRefineRounds() : 2;
+                    String reply = manager.critiqueChain(message, genRole, critRole, refine);
+                    yield new ChatResponse(reply, "critique_chain", null);
+                }
+                case "voting_consensus" -> {
+                    List<String> roles = request.getRoles();
+                    String reply = manager.votingConsensus(message, roles);
+                    yield new ChatResponse(reply, "voting_consensus", null);
+                }
+                case "brainstorm" -> {
+                    List<String> roles = request.getRoles();
+                    String reply = manager.brainstorm(message, roles);
+                    yield new ChatResponse(reply, "brainstorm", null);
+                }
+                case "chat_all" -> {
+                    String reply = manager.chatWithAll(message);
+                    yield new ChatResponse(reply, "chat_all", null);
+                }
+                case "list_modes" -> {
+                    String reply = manager.listModes();
+                    yield new ChatResponse(reply, "list_modes", null);
+                }
+                default -> {
+                    String reply = manager.chat(message);
+                    yield new ChatResponse(reply, "auto", null);
+                }
+            };
         } catch (Exception e) {
             return new ChatResponse("错误: " + e.getMessage());
         }
     }
 
     /**
-     * 编排模式：让多个 Agent 链式协作
-     * @param request  { "message": "...", "roles": ["calculator", "summarizer"] }
+     * 编排模式（兼容旧端点）
      */
     @PostMapping("/chat/orchestrate")
     public ChatResponse orchestrate(@RequestBody Map<String, Object> request) {
@@ -65,6 +113,10 @@ public class AgentController {
         result.put("agents", manager.getAllAgentInfo());
         result.put("orchestrator_ready", manager.isOrchestratorReady());
         result.put("status", manager.isOrchestratorReady() ? "正常" : "不可用");
+        result.put("available_modes", List.of(
+            "auto", "orchestrate", "parallel", "debate",
+            "critique_chain", "voting_consensus", "brainstorm", "chat_all"
+        ));
         return result;
     }
 

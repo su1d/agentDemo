@@ -1,6 +1,5 @@
 package com.agent.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -13,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Manages multiple AgentWorkerService instances, one per role.
- * Automatically starts all workers on application startup.
+ * Supports multiple collaboration modes with DB logging.
  */
 @Service
 public class AgentWorkerManager {
@@ -23,15 +22,22 @@ public class AgentWorkerManager {
 
     private final Map<String, AgentWorkerService> workers = new ConcurrentHashMap<>();
 
-    // All available agent roles
+    // Injected execution service for DB logging
+    private AgentExecutionService executionService;
+
     private static final List<String> ROLES = List.of(
         "orchestrator", "calculator", "weather", "searcher", "summarizer"
     );
+
+    public AgentWorkerManager(AgentExecutionService executionService) {
+        this.executionService = executionService;
+    }
 
     @PostConstruct
     public void init() {
         for (String role : ROLES) {
             AgentWorkerService worker = new AgentWorkerService(role);
+            worker.setExecutionService(executionService);
             worker.start();
             workers.put(role, worker);
         }
@@ -46,52 +52,83 @@ public class AgentWorkerManager {
         workers.clear();
     }
 
-    /**
-     * Get a specific worker by role.
-     */
     public AgentWorkerService getWorker(String role) {
         return workers.get(role);
     }
 
-    /**
-     * Get the orchestrator worker.
-     */
     public AgentWorkerService getOrchestrator() {
         return workers.get("orchestrator");
     }
 
-    /**
-     * Route: use orchestrator to determine the right agent, then call it.
-     */
     public String chat(String message) throws Exception {
         AgentWorkerService orchestrator = getOrchestrator();
         if (orchestrator == null || !orchestrator.isReady()) {
             return "Error: Orchestrator is not ready.";
         }
-        return orchestrator.chat(message);
+        String sessionId = executionService.generateSessionId();
+        String req = mapper.writeValueAsString(Map.of("message", message));
+        return orchestrator.sendWithLog(req, sessionId, "auto");
     }
 
-    /**
-     * Execute a multi-agent orchestration chain.
-     * @param message  user input
-     * @param roles    ordered list of roles to execute
-     * @return chain results as JSON string
-     */
     public String orchestrate(String message, List<String> roles) throws Exception {
+        return sendToOrchestrator("orchestrate", message, Map.of("roles", roles));
+    }
+
+    public String parallelCall(String message, List<String> roles) throws Exception {
+        Map<String, Object> params = new HashMap<>();
+        if (roles != null) params.put("roles", roles);
+        return sendToOrchestrator("parallel", message, params);
+    }
+
+    public String debate(String message, List<String> roles, int rounds) throws Exception {
+        Map<String, Object> params = new HashMap<>();
+        if (roles != null) params.put("roles", roles);
+        params.put("rounds", rounds);
+        return sendToOrchestrator("debate", message, params);
+    }
+
+    public String critiqueChain(String message, String generateRole, String critiqueRole, int refineRounds) throws Exception {
+        Map<String, Object> params = new HashMap<>();
+        params.put("generate_role", generateRole);
+        params.put("critique_role", critiqueRole);
+        params.put("refine_rounds", refineRounds);
+        return sendToOrchestrator("critique_chain", message, params);
+    }
+
+    public String votingConsensus(String message, List<String> roles) throws Exception {
+        Map<String, Object> params = new HashMap<>();
+        if (roles != null) params.put("roles", roles);
+        return sendToOrchestrator("voting_consensus", message, params);
+    }
+
+    public String brainstorm(String message, List<String> roles) throws Exception {
+        Map<String, Object> params = new HashMap<>();
+        if (roles != null) params.put("roles", roles);
+        return sendToOrchestrator("brainstorm", message, params);
+    }
+
+    public String chatWithAll(String message) throws Exception {
+        return sendToOrchestrator("chat_all", message, Map.of());
+    }
+
+    public String listModes() throws Exception {
+        return sendToOrchestrator("list_modes", "", Map.of());
+    }
+
+    private String sendToOrchestrator(String action, String message, Map<String, Object> extraParams) throws Exception {
         AgentWorkerService orchestrator = getOrchestrator();
         if (orchestrator == null || !orchestrator.isReady()) {
-            return "Error: Orchestrator is not ready.";
+            return "{\"type\":\"error\",\"content\":\"Orchestrator is not ready.\"}";
         }
-        Map<String, Object> req = new HashMap<>();
+        Map<String, Object> req = new LinkedHashMap<>(extraParams);
         req.put("message", message);
-        req.put("action", "orchestrate");
-        req.put("roles", roles);
-        return orchestrator.send(mapper.writeValueAsString(req));
+        req.put("action", action);
+
+        String sessionId = executionService.generateSessionId();
+
+        return orchestrator.sendWithLog(mapper.writeValueAsString(req), sessionId, action);
     }
 
-    /**
-     * Get all agents status info.
-     */
     public Map<String, Object> getAllAgentInfo() {
         Map<String, Object> result = new LinkedHashMap<>();
         for (Map.Entry<String, AgentWorkerService> entry : workers.entrySet()) {
@@ -104,17 +141,11 @@ public class AgentWorkerManager {
         return result;
     }
 
-    /**
-     * Check if a specific worker is ready.
-     */
     public boolean isReady(String role) {
         AgentWorkerService w = workers.get(role);
         return w != null && w.isReady();
     }
 
-    /**
-     * Check if the orchestrator is ready.
-     */
     public boolean isOrchestratorReady() {
         return isReady("orchestrator");
     }
