@@ -1,0 +1,347 @@
+<template>
+  <div class="chat-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <h3>Agent 鐘舵€</h3>
+        <div class="agents-list">
+          <div v-for="agent in agentsList" :key="agent.role" class="agent-item">
+            <div class="agent-dot" :class="agent.ready ? 'dot-green' : 'dot-red'"></div>
+            <code>{{ agent.role }}</code>
+            <span v-if="agent.ready" class="check-mark">✔</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <h3>鍗忎綔妯″紡</h3>
+        <div class="mode-grid">
+          <button v-for="m in modes" :key="m.value"
+            @click="selectMode(m.value)"
+            :class="['mode-btn', mode === m.value ? 'active' : '']"
+            :title="m.desc">
+            <span class="mode-icon">{{ m.icon }}</span>
+            <span class="mode-label">{{ m.label }}</span>
+          </button>
+        </div>
+        <div v-if="showModeOptions" class="mode-options">
+          <div v-if="['orchestrate', 'parallel', 'debate', 'voting_consensus', 'brainstorm'].includes(mode)">
+            <label class="option-label">閫夋嫨鍙備笌 Agent锛</label>
+            <div class="role-checkbox-group">
+              <label v-for="r in availableRoles" :key="r" class="role-checkbox">
+                <input type="checkbox" :value="r" v-model="selectedRoles" />
+                {{ r }}
+              </label>
+            </div>
+          </div>
+          <div v-if="mode === 'debate'">
+            <label class="option-label">杈╄杞暟锛</label>
+            <input type="number" v-model.number="debateRounds" min="1" max="5" class="opt-input" />
+          </div>
+          <div v-if="mode === 'critique_chain'">
+            <label class="option-label">鐢熸垚 Agent锛?              <select v-model="critiqueGenRole" class="opt-select">
+                <option v-for="r in availableRoles" :key="r" :value="r">{{ r }}</option>
+              </select>
+            </label>
+            <label class="option-label">鎵硅瘎 Agent锛?              <select v-model="critiqueCritRole" class="opt-select">
+                <option v-for="r in availableRoles" :key="r" :value="r">{{ r }}</option>
+              </select>
+            </label>
+            <label class="option-label">鏀硅繘杞暟锛?              <input type="number" v-model.number="critiqueRounds" min="1" max="5" class="opt-input" />
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <h3>鍚庣鐘舵€</h3>
+        <p>鍚庣: <span :class="backendOnline ? 'text-green' : 'text-red'">{{ backendOnline ? '鍦ㄧ嚎' : '绂荤嚎' }}</span></p>
+        <p>Agent 灏辩华: <span class="text-green">{{ readyCount }}/{{ totalCount }}</span></p>
+      </div>
+    </aside>
+
+    <!-- Chat Area -->
+    <main class="chat-area">
+      <div class="messages-container" ref="messagesRef">
+        <div v-if="messages.length === 0" class="empty-state">
+          <div class="empty-icon">馃</div>
+          <h2>浣犲ソ锛佹垜鏄鏅鸿兘浣撶郴缁</h2>
+          <p>鎴戞湁 5 涓笓瀹?Agent + 7 绉嶅崗浣滄ā寮</p>
+          <p>褰撳墠妯″紡锛<strong>{{ getModeLabel(mode) }}</strong></p>
+          <p class="empty-hint">鍦ㄥ乏渚ч€夋嫨鍗忎綔妯″紡锛岀劧鍚庡湪涓嬫柟杈撳叆浣犵殑闂</p>
+        </div>
+
+        <div v-for="(msg, idx) in messages" :key="idx" class="message-row" :class="msg.role">
+          <div class="avatar">{{ msg.role === 'user' ? '馃憗' : '馃' }}</div>
+          <div class="bubble">
+            <div v-if="msg.role === 'assistant'" class="sender">
+              <span>{{ msg.agentRole || 'System' }}</span>
+              <span v-if="msg.collaborationMode" class="mode-tag">{{ msg.collaborationMode }}</span>
+            </div>
+            <div class="text">{{ msg.text }}</div>
+            <div v-if="msg.details" class="detail-section">
+              <div v-if="msg.collaborationMode === 'orchestrate'" class="summary-card">
+                <div class="summary-card-header">馃摑 缁煎悎鍥炵瓟</div>
+                <div class="summary-card-body">{{ msg.details.summary }}</div>
+              </div>
+              <div v-else-if="msg.collaborationMode === 'parallel'" class="detail-section">
+                <div v-for="(res, role) in msg.details.parallelResults" :key="role" class="agent-card">
+                  <div class="agent-card-header">{{ role }}</div>
+                  <div class="agent-card-body">{{ res }}</div>
+                </div>
+              </div>
+              <div v-else-if="msg.collaborationMode === 'debate'" class="detail-section">
+                <div v-for="round in msg.details.rounds" :key="round.round" class="debate-round">
+                  <div class="round-title">绗?{{ round.round }} 杞</div>
+                  <div v-for="(res, role) in round.responses" :key="role" class="agent-card">
+                    <div class="agent-card-header">{{ role }}</div>
+                    <div class="agent-card-body">{{ res }}</div>
+                  </div>
+                </div>
+                <div class="summary-card">
+                  <div class="summary-card-header">馃摑 鎬荤粨</div>
+                  <div class="summary-card-body">{{ msg.details.summary }}</div>
+                </div>
+              </div>
+              <div v-else-if="msg.collaborationMode === 'critique_chain'" class="detail-section">
+                <div v-for="step in msg.details.steps" :key="step.step" :class="['critique-step', 'step-' + step.type]">
+                  <span class="step-icon">{{ step.type === 'generate' ? '鉁忥笍' : step.type === 'critique' ? '馃攳' : '馃攧' }}</span>
+                  <div class="step-content">
+                    <div class="step-header">{{ step.type === 'generate' ? '鐢熸垚' : step.type === 'critique' ? '鎵硅瘎' : '鏀硅繘' }} ({{ step.role }})</div>
+                    <div class="step-body">{{ step.content }}</div>
+                  </div>
+                </div>
+                <div class="summary-card">
+                  <div class="summary-card-header">馃摑 鏈€缁堢粨鏋</div>
+                  <div class="summary-card-body">{{ msg.details.finalResult }}</div>
+                </div>
+              </div>
+              <div v-else-if="['voting_consensus', 'brainstorm', 'chat_all'].includes(msg.collaborationMode)" class="detail-section">
+                <div v-for="(res, role) in msg.details.responses" :key="role" class="agent-card">
+                  <div class="agent-card-header">{{ role }}</div>
+                  <div class="agent-card-body">{{ res }}</div>
+                </div>
+                <div v-if="msg.details.summary" class="summary-card">
+                  <div class="summary-card-header">馃摑 鎬荤粨</div>
+                  <div class="summary-card-body">{{ msg.details.summary }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="isLoading" class="message-row assistant">
+          <div class="avatar">馃</div>
+          <div class="bubble typing-indicator">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="input-area">
+        <input type="text" v-model="userInput" class="chat-input"
+          placeholder="杈撳叆浣犵殑闂..." @keydown.enter="sendMessage"
+          :disabled="isLoading" />
+        <button class="send-btn" @click="sendMessage" :disabled="isLoading || !userInput.trim()">鉃</button>
+      </div>
+    </main>
+  </div>
+</template>
+
+<script>
+const API_BASE = 'http://localhost:8080/api'
+
+export default {
+  name: 'ChatView',
+  data() {
+    return {
+      mode: 'auto',
+      messages: [],
+      userInput: '',
+      isLoading: false,
+      agentsList: [],
+      backendOnline: false,
+      showModeOptions: false,
+      selectedRoles: [],
+      debateRounds: 2,
+      critiqueGenRole: 'searcher',
+      critiqueCritRole: 'summarizer',
+      critiqueRounds: 2,
+      modes: [
+        { value: 'auto', label: 'auto', icon: '馃槀', desc: 'auto select best Agent' },
+        { value: 'orchestrate', label: '缂栨帓', icon: '馃幖', desc: '澶?Agent 鍗忎綔缂栨帓锛岀敱鎬荤粨 Agent 姹囨€?' },
+        { value: 'parallel', label: 'parallel', icon: '鈿?', desc: 'all Agents parallel process, results shown in order' },
+        { value: 'debate', label: 'debate', icon: '馃挰', desc: 'multi-round debate, reach consensus' },
+        { value: 'critique_chain', label: 'critique_chain', icon: '馃敆', desc: 'generate -> critique -> refine iteration' },
+        { value: 'voting_consensus', label: 'voting_consensus', icon: '馃棾锔?', desc: 'multiple Agents vote to reach consensus' },
+        { value: 'brainstorm', label: 'brainstorm', icon: '馃槉', desc: 'multiple Agents brainstorm to create ideas' },
+        { value: 'chat_all', label: 'chat_all', icon: '馃懃', desc: 'all Agents reply independently' },
+      ],
+    }
+  },
+  computed: {
+    availableRoles() { return this.agentsList.filter(a => a.ready).map(a => a.role) },
+    readyCount() { return this.agentsList.filter(a => a.ready).length },
+    totalCount() { return this.agentsList.length },
+    statusClass() {
+      if (!this.backendOnline) return 'badge-red'
+      const r = this.readyCount, t = this.totalCount
+      return r === t ? 'badge-green' : r > 0 ? 'badge-yellow' : 'badge-red'
+    },
+    statusText() {
+      if (!this.backendOnline) return '绂荤嚎'
+      const r = this.readyCount, t = this.totalCount
+      return r === t ? '鍏ㄩ儴灏辩华' : r > 0 ? `${r}/${t} 灏辩华` : '绂荤嚎'
+    },
+  },
+  watch: {
+    mode() {
+      this.showModeOptions = this.mode !== 'auto'
+      if (this.mode === 'auto') this.selectedRoles = []
+    },
+  },
+  mounted() {
+    this.fetchAgents()
+    setInterval(() => this.fetchAgents(), 30000)
+  },
+  methods: {
+    getModeLabel(v) {
+      const m = this.modes.find(m => m.value === v)
+      return m ? m.label : v
+    },
+    selectMode(v) {
+      this.mode = v
+      this.selectedRoles = [...this.availableRoles]
+    },
+    async fetchAgents() {
+      try {
+        const r = await fetch(`${API_BASE}/agents`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } })
+        const data = await r.json()
+        this.agentsList = Object.entries(data).map(([role, info]) => ({
+          role, ready: info.ready
+        }))
+        this.backendOnline = true
+      } catch {
+        this.backendOnline = false
+      }
+    },
+    async sendMessage() {
+      const text = this.userInput.trim()
+      if (!text || this.isLoading) return
+      this.messages.push({ role: 'user', text })
+      this.userInput = ''
+      this.isLoading = true
+
+      try {
+        const body = {
+          message: text,
+          action: this.mode === 'auto' ? 'chat' : this.mode,
+          roles: this.selectedRoles.length ? this.selectedRoles : undefined,
+          rounds: this.mode === 'debate' ? this.debateRounds : undefined,
+          generateRole: this.mode === 'critique_chain' ? this.critiqueGenRole : undefined,
+          critiqueRole: this.mode === 'critique_chain' ? this.critiqueCritRole : undefined,
+          refineRounds: this.mode === 'critique_chain' ? this.critiqueRounds : undefined,
+        }
+        const r = await fetch(`${API_BASE}/chat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('token') },
+          body: JSON.stringify(body),
+        })
+        const data = await r.json()
+        this.messages.push({
+          role: 'assistant',
+          text: data.reply || data.message,
+          agentRole: data.agentRole || data.mode,
+          collaborationMode: data.mode || this.mode,
+          details: data.details || null,
+        })
+      } catch (e) {
+        this.messages.push({ role: 'assistant', text: 'Failed to connect to server, please check if backend is running.' })
+      }
+      this.isLoading = false
+      this.$nextTick(() => {
+        const el = this.$refs.messagesRef
+        if (el) el.scrollTop = el.scrollHeight
+      })
+    },
+  },
+}
+</script>
+
+<style scoped>
+.chat-layout { display: flex; height: 100%; }
+
+/* Sidebar */
+.sidebar { width: 220px; background: #0f0f1e; border-right: 1px solid #2a2a4a; padding: 16px; display: flex; flex-direction: column; gap: 16px; overflow-y: auto; flex-shrink: 0; }
+.sidebar-section h3 { font-size: 12px; color: #7c7cff; margin: 0 0 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+.sidebar-section p { font-size: 12px; color: #a0a0b0; margin: 2px 0; }
+.agents-list { display: flex; flex-direction: column; gap: 4px; }
+.agent-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #a0a0b0; }
+.agent-dot { width: 6px; height: 6px; border-radius: 50%; }
+.dot-green { background: #4ade80; }
+.dot-red { background: #f87171; }
+.check-mark { color: #4ade80; font-size: 10px; }
+.mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+.mode-btn { display: flex; flex-direction: column; align-items: center; padding: 6px 4px; border: 1px solid #2a2a4a; border-radius: 6px; background: #15152a; color: #a0a0b0; cursor: pointer; font-size: 10px; transition: all 0.2s; }
+.mode-btn:hover { border-color: #5a5a8a; background: #1a1a35; }
+.mode-btn.active { border-color: #7c7cff; background: #1e1e3a; color: #7c7cff; }
+.mode-icon { font-size: 16px; }
+.mode-label { font-size: 9px; margin-top: 2px; }
+.mode-options { margin-top: 8px; display: flex; flex-direction: column; gap: 8px; }
+.option-label { font-size: 11px; color: #a0a0b0; display: flex; flex-direction: column; gap: 4px; }
+.role-checkbox-group { display: flex; flex-wrap: wrap; gap: 4px; }
+.role-checkbox { font-size: 11px; color: #a0a0b0; display: flex; align-items: center; gap: 4px; }
+.opt-input, .opt-select { padding: 4px 6px; border: 1px solid #2a2a4a; border-radius: 4px; background: #0f0f1a; color: #e0e0e0; font-size: 11px; width: 100%; }
+.text-green { color: #4ade80; }
+.text-red { color: #f87171; }
+
+/* Chat */
+.chat-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.messages-container { flex: 1; overflow-y: auto; padding: 24px; }
+.empty-state { text-align: center; padding: 60px 20px; }
+.empty-icon { font-size: 48px; margin-bottom: 12px; }
+.empty-state h2 { font-size: 20px; color: #c0c0e0; margin: 0 0 8px; }
+.empty-state p { font-size: 13px; color: #606070; margin: 4px 0; }
+.empty-hint { font-size: 12px; color: #505060; font-style: italic; }
+.message-row { display: flex; gap: 12px; margin-bottom: 20px; max-width: 900px; }
+.message-row.user { flex-direction: row-reverse; margin-left: auto; }
+.message-row.user .bubble { background: #2a2a5a; border: 1px solid #3a3a7a; }
+.avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; background: #1e1e38; flex-shrink: 0; }
+.bubble { background: #1e1e38; border: 1px solid #2a2a4a; border-radius: 12px; padding: 12px 16px; max-width: 750px; }
+.sender { font-size: 11px; font-weight: 600; color: #7c7cff; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+.mode-tag { background: #2a2a5a; color: #7c7cff; padding: 1px 8px; border-radius: 8px; font-size: 10px; font-weight: 400; }
+.text { font-size: 14px; line-height: 1.6; word-break: break-word; white-space: pre-wrap; }
+.detail-section { margin-top: 12px; border-top: 1px solid #2a2a4a; padding-top: 12px; }
+.summary-card { background: #1a2a1a; border: 1px solid #2a4a2a; border-radius: 6px; margin-top: 8px; overflow: hidden; }
+.summary-card-header { background: #1a3a1a; padding: 6px 10px; font-size: 11px; color: #4ade80; font-weight: 500; }
+.summary-card-body { padding: 8px 10px; font-size: 12px; color: #c0e0c0; line-height: 1.5; white-space: pre-wrap; }
+.agent-card { background: #15152a; border: 1px solid #25254a; border-radius: 6px; margin-bottom: 6px; overflow: hidden; }
+.agent-card-header { background: #1a1a35; padding: 6px 10px; font-size: 11px; color: #b0b0ff; font-weight: 500; }
+.agent-card-body { padding: 8px 10px; font-size: 12px; color: #c0c0d0; line-height: 1.5; white-space: pre-wrap; }
+.debate-round { margin-bottom: 8px; }
+.round-title { font-size: 12px; color: #facc15; font-weight: 600; margin-bottom: 4px; }
+.critique-step { display: flex; gap: 8px; margin-bottom: 6px; padding: 8px; background: #15152a; border-radius: 6px; border-left: 3px solid #2a2a4a; }
+.step-generate { border-left-color: #7c7cff; }
+.step-critique { border-left-color: #f87171; }
+.step-refine { border-left-color: #4ade80; }
+.step-icon { font-size: 16px; flex-shrink: 0; }
+.step-content { flex: 1; }
+.step-header { font-size: 11px; color: #b0b0c0; font-weight: 500; margin-bottom: 4px; }
+.step-body { font-size: 12px; color: #c0c0d0; line-height: 1.5; white-space: pre-wrap; }
+.typing-indicator { display: flex; align-items: center; gap: 6px; padding: 16px 20px; }
+.typing-indicator span { width: 8px; height: 8px; border-radius: 50%; background: #7c7cff; animation: bounce 1.4s infinite; }
+.typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+.typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes bounce { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-8px); } }
+.input-area { display: flex; gap: 8px; padding: 16px 24px; background: #1a1a2e; border-top: 1px solid #2a2a4a; }
+.chat-input { flex: 1; padding: 12px 16px; border: 1px solid #2a2a4a; border-radius: 8px; background: #0f0f1a; color: #e0e0e0; font-size: 14px; outline: none; }
+.chat-input:focus { border-color: #7c7cff; }
+.send-btn { width: 44px; height: 44px; border: none; border-radius: 8px; background: #7c7cff; color: white; font-size: 18px; cursor: pointer; }
+.send-btn:hover:not(:disabled) { background: #6a6aff; }
+.send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #2a2a4a; border-radius: 3px; }
+</style>
+
+

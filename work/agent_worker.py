@@ -1,8 +1,14 @@
-﻿import sys, os, json, io
+import sys, os, json, io
 
 if sys.stdout.encoding != "utf-8":
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
+
+def format_result(result):
+    """Convert dict/list result to human-readable text."""
+    if isinstance(result, dict) or isinstance(result, list):
+        return json.dumps(result, ensure_ascii=False, indent=2)
+    return result
 
 def safe_json(obj):
     return json.dumps(obj, ensure_ascii=False, default=str)
@@ -45,43 +51,43 @@ for line in sys.stdin:
         if action == "orchestrate":
             roles = data.get("roles", None)
             result = agent.orchestrate(msg, roles)
-            print(safe_json({"type": "reply", "content": safe_json(result)}))
+            print(safe_json({"type": "reply", "content": result}))
 
         elif action == "list_agents":
             result = agent.list_agents()
-            print(safe_json({"type": "reply", "content": safe_json(result)}))
+            print(safe_json({"type": "reply", "content": result}))
 
         elif action == "chat_all":
             result = agent.chat_with_all(msg)
-            print(safe_json({"type": "reply", "content": safe_json(result)}))
+            print(safe_json({"type": "reply", "content": result}))
 
         elif action == "parallel":
             roles = data.get("roles", None)
             result = agent.parallel_call(msg, roles)
-            print(safe_json({"type": "reply", "content": safe_json(result)}))
+            print(safe_json({"type": "reply", "content": result}))
 
         elif action == "debate":
             roles = data.get("roles", None)
             rounds = data.get("rounds", 2)
             result = agent.debate(msg, roles, rounds)
-            print(safe_json({"type": "reply", "content": safe_json(result)}))
+            print(safe_json({"type": "reply", "content": result}))
 
         elif action == "critique_chain":
             generate_role = data.get("generate_role", "searcher")
             critique_role = data.get("critique_role", "summarizer")
             refine_rounds = data.get("refine_rounds", 2)
             result = agent.critique_chain(msg, generate_role, critique_role, refine_rounds)
-            print(safe_json({"type": "reply", "content": safe_json(result)}))
+            print(safe_json({"type": "reply", "content": result}))
 
         elif action == "voting_consensus":
             roles = data.get("roles", None)
             result = agent.voting_consensus(msg, roles)
-            print(safe_json({"type": "reply", "content": safe_json(result)}))
+            print(safe_json({"type": "reply", "content": result}))
 
         elif action == "brainstorm":
             roles = data.get("roles", None)
             result = agent.brainstorm(msg, roles)
-            print(safe_json({"type": "reply", "content": safe_json(result)}))
+            print(safe_json({"type": "reply", "content": result}))
 
         elif action == "list_modes":
             modes = [
@@ -95,7 +101,7 @@ for line in sys.stdin:
                 "chat_all (compare all)",
                 "list_agents"
             ]
-            print(safe_json({"type": "reply", "content": safe_json({"modes": modes})}))
+            print(safe_json({"type": "reply", "content": {"modes": modes}}))
 
         else:
             if msg:

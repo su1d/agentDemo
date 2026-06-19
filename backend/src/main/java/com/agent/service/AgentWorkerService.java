@@ -23,7 +23,7 @@ public class AgentWorkerService {
     private static final Logger log = LoggerFactory.getLogger(AgentWorkerService.class);
     private static final String PYTHON = "python";
     private static final String WORKER_SCRIPT = "work/agent_worker.py";
-    private static final File WORK_DIR = new File(System.getProperty("user.dir")).getAbsoluteFile();
+    private static final File WORK_DIR = new File(System.getProperty("user.dir")).getParentFile().getAbsoluteFile();
     private static final long TIMEOUT_MS = 120000;
     private static final int MAX_RETRIES = 2;
 
@@ -242,3 +242,4 @@ public class AgentWorkerService {
         return stats;
     }
 }
+

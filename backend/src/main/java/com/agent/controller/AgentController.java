@@ -3,6 +3,7 @@ package com.agent.controller;
 import com.agent.model.ChatRequest;
 import com.agent.model.ChatResponse;
 import com.agent.service.AgentWorkerManager;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -13,6 +14,23 @@ import java.util.*;
 public class AgentController {
 
     private final AgentWorkerManager manager;
+    private final ObjectMapper mapper = new ObjectMapper();
+
+    private String extractReplyContent(String rawReply) {
+        if (rawReply == null || rawReply.isBlank()) return rawReply;
+        try {
+            var node = mapper.readTree(rawReply);
+            if (node.has("type") && "reply".equals(node.get("type").asText()) && node.has("content")) {
+                var contentNode = node.get("content");
+                if (contentNode.isTextual()) {
+                    return contentNode.asText();
+                } else {
+                    return contentNode.toPrettyString();
+                }
+            }
+        } catch (Exception ignored) {}
+        return rawReply;
+    }
 
     public AgentController(AgentWorkerManager manager) {
         this.manager = manager;
@@ -26,55 +44,48 @@ public class AgentController {
         try {
             String message = request.getMessage();
             String action = request.getAction() != null ? request.getAction() : "chat";
+            String rawReply;
 
-            return switch (action) {
-                case "orchestrate" -> {
+            switch (action) {
+                case "orchestrate": {
                     List<String> roles = request.getRoles();
                     if (roles == null) roles = List.of("calculator", "summarizer");
-                    String reply = manager.orchestrate(message, roles);
-                    yield new ChatResponse(reply, "orchestrate", null);
+                    rawReply = manager.orchestrate(message, roles);
+                    break;
                 }
-                case "parallel" -> {
-                    List<String> roles = request.getRoles();
-                    String reply = manager.parallelCall(message, roles);
-                    yield new ChatResponse(reply, "parallel", null);
-                }
-                case "debate" -> {
-                    List<String> roles = request.getRoles();
+                case "parallel":
+                    rawReply = manager.parallelCall(message, request.getRoles());
+                    break;
+                case "debate": {
                     int rounds = request.getRounds() != null ? request.getRounds() : 2;
-                    String reply = manager.debate(message, roles, rounds);
-                    yield new ChatResponse(reply, "debate", null);
+                    rawReply = manager.debate(message, request.getRoles(), rounds);
+                    break;
                 }
-                case "critique_chain" -> {
+                case "critique_chain": {
                     String genRole = request.getGenerateRole() != null ? request.getGenerateRole() : "searcher";
                     String critRole = request.getCritiqueRole() != null ? request.getCritiqueRole() : "summarizer";
                     int refine = request.getRefineRounds() != null ? request.getRefineRounds() : 2;
-                    String reply = manager.critiqueChain(message, genRole, critRole, refine);
-                    yield new ChatResponse(reply, "critique_chain", null);
+                    rawReply = manager.critiqueChain(message, genRole, critRole, refine);
+                    break;
                 }
-                case "voting_consensus" -> {
-                    List<String> roles = request.getRoles();
-                    String reply = manager.votingConsensus(message, roles);
-                    yield new ChatResponse(reply, "voting_consensus", null);
-                }
-                case "brainstorm" -> {
-                    List<String> roles = request.getRoles();
-                    String reply = manager.brainstorm(message, roles);
-                    yield new ChatResponse(reply, "brainstorm", null);
-                }
-                case "chat_all" -> {
-                    String reply = manager.chatWithAll(message);
-                    yield new ChatResponse(reply, "chat_all", null);
-                }
-                case "list_modes" -> {
-                    String reply = manager.listModes();
-                    yield new ChatResponse(reply, "list_modes", null);
-                }
-                default -> {
-                    String reply = manager.chat(message);
-                    yield new ChatResponse(reply, "auto", null);
-                }
-            };
+                case "voting_consensus":
+                    rawReply = manager.votingConsensus(message, request.getRoles());
+                    break;
+                case "brainstorm":
+                    rawReply = manager.brainstorm(message, request.getRoles());
+                    break;
+                case "chat_all":
+                    rawReply = manager.chatWithAll(message);
+                    break;
+                case "list_modes":
+                    rawReply = manager.listModes();
+                    break;
+                default:
+                    rawReply = manager.chat(message);
+                    break;
+            }
+            String reply = extractReplyContent(rawReply);
+            return new ChatResponse(reply, action, null);
         } catch (Exception e) {
             return new ChatResponse("错误: " + e.getMessage());
         }
