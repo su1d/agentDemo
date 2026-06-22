@@ -24,13 +24,16 @@ public class AgentWorkerManager {
 
     // Injected execution service for DB logging
     private AgentExecutionService executionService;
+    // Injected provider config for LLM API keys
+    private ProviderConfigService providerConfigService;
 
     private static final List<String> ROLES = List.of(
         "orchestrator", "calculator", "weather", "searcher", "summarizer"
     );
 
-    public AgentWorkerManager(AgentExecutionService executionService) {
+    public AgentWorkerManager(AgentExecutionService executionService, ProviderConfigService providerConfigService) {
         this.executionService = executionService;
+        this.providerConfigService = providerConfigService;
     }
 
     @PostConstruct
@@ -38,6 +41,7 @@ public class AgentWorkerManager {
         for (String role : ROLES) {
             AgentWorkerService worker = new AgentWorkerService(role);
             worker.setExecutionService(executionService);
+            worker.setProviderConfig(providerConfigService);
             worker.start();
             workers.put(role, worker);
         }

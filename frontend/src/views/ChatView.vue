@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="chat-layout">
     <!-- Sidebar -->
     <aside class="sidebar">
@@ -205,7 +205,7 @@ export default {
       messages: [],
       userInput: '',
       loading: false,
-      mode: 'orchestrate',
+      mode: 'auto',
       selectedRoles: [],
       debateRounds: 2,
       critiqueGenRole: 'orchestrator',

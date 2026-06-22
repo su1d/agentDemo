@@ -12,6 +12,8 @@ import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
 
+
+
 /**
  * Manages a single Python LangGraph agent worker process.
  * Each worker has a role (orchestrator, calculator, weather, etc.).
@@ -23,7 +25,7 @@ public class AgentWorkerService {
     private static final Logger log = LoggerFactory.getLogger(AgentWorkerService.class);
     private static final String PYTHON = "python";
     private static final String WORKER_SCRIPT = "work/agent_worker.py";
-    private static final File WORK_DIR = new File(System.getProperty("user.dir")).getParentFile().getAbsoluteFile();
+    private static final File WORK_DIR = new File(System.getProperty("user.dir")).getAbsoluteFile();
     private static final long TIMEOUT_MS = 120000;
     private static final int MAX_RETRIES = 2;
 
@@ -43,6 +45,8 @@ public class AgentWorkerService {
     // Injected lazily to avoid circular dependency with AgentExecutionService
     private AgentExecutionService executionService;
 
+    private ProviderConfigService providerConfigService;
+
     public AgentWorkerService() {
         this.role = "orchestrator";
     }
@@ -56,12 +60,26 @@ public class AgentWorkerService {
         this.executionService = executionService;
     }
 
+    /** Setter for ProviderConfig (called by Manager after construction) */
+    public void setProviderConfig(ProviderConfigService providerConfigService) {
+        this.providerConfigService = providerConfigService;
+    }
+
     @PostConstruct
     public void start() {
         try {
             ProcessBuilder pb = new ProcessBuilder(PYTHON, "-u", WORKER_SCRIPT);
             pb.directory(WORK_DIR);
             pb.environment().put("WORKER_ROLE", role);
+            pb.environment().put("PYTHONIOENCODING", "utf-8");
+            String providerKey = providerConfigService != null ? providerConfigService.getPrimaryProviderKey() : "openai";
+            String apiKey = providerConfigService != null ? providerConfigService.getApiKey(providerKey) : System.getenv("OPENAI_API_KEY");
+            String baseUrl = providerConfigService != null ? providerConfigService.getBaseUrl(providerKey) : "https://api.openai.com/v1";
+            String model = providerConfigService != null ? providerConfigService.getDefaultModel(providerKey) : "gpt-4o-mini";
+            log.info("Starting agent worker [{}] with provider '{}', model: {}", role, providerKey, model);
+            pb.environment().put("OPENAI_API_KEY", apiKey);
+            pb.environment().put("OPENAI_BASE_URL", baseUrl);
+            pb.environment().put("OPENAI_MODEL", model);
             pb.redirectErrorStream(false);
 
             process = pb.start();

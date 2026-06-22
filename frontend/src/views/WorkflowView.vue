@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="workflow-page">
     <WorkflowEditor />
   </div>

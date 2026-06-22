@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="workflow-viewer">
     <div class="viewer-header">
       <h2>

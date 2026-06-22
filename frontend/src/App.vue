@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="app-container">
     <template v-if="isLoggedIn">
       <div class="app-layout">

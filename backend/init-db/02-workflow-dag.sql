@@ -1,4 +1,4 @@
-﻿-- Workflow Edge table for DAG connections
+-- Workflow Edge table for DAG connections
 CREATE TABLE IF NOT EXISTS agent_workflow_edge (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     workflow_id BIGINT NOT NULL COMMENT '所属工作流ID',

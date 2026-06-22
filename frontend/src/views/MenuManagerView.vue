@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="menu-manager">
     <div class="page-header">
       <div class="header-left">

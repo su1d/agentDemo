@@ -2,15 +2,15 @@
 
 CREATE TABLE IF NOT EXISTS agent_workflow_node (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL COMMENT '½ÚµãÃû³Æ',
-    description VARCHAR(500) COMMENT '½ÚµãÃèÊö',
-    agent_role VARCHAR(50) NOT NULL COMMENT '¹ØÁªAgent½ÇÉ«',
-    workflow_id BIGINT NOT NULL COMMENT 'ËùÊô¹¤×÷Á÷ID',
-    sort_order INT DEFAULT 0 COMMENT 'ÅÅĞòË³Ğò',
-    input_template TEXT COMMENT 'ÊäÈëÄ£°å',
-    output_mapping TEXT COMMENT 'Êä³öÓ³ÉäÅäÖÃ(JSON)',
-    timeout_seconds INT DEFAULT 60 COMMENT '³¬Ê±Ê±¼ä',
-    retry_count INT DEFAULT 0 COMMENT 'ÖØÊÔ´ÎÊı',
+    name VARCHAR(100) NOT NULL COMMENT 'ï¿½Úµï¿½ï¿½ï¿½ï¿½ï¿½',
+    description VARCHAR(500) COMMENT 'ï¿½Úµï¿½ï¿½ï¿½ï¿½ï¿½',
+    agent_role VARCHAR(50) NOT NULL COMMENT 'ï¿½ï¿½ï¿½ï¿½Agentï¿½ï¿½É«',
+    workflow_id BIGINT NOT NULL COMMENT 'ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ID',
+    sort_order INT DEFAULT 0 COMMENT 'ï¿½ï¿½ï¿½ï¿½Ë³ï¿½ï¿½',
+    input_template TEXT COMMENT 'ï¿½ï¿½ï¿½ï¿½Ä£ï¿½ï¿½',
+    output_mapping TEXT COMMENT 'ï¿½ï¿½ï¿½Ó³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½(JSON)',
+    timeout_seconds INT DEFAULT 60 COMMENT 'ï¿½ï¿½Ê±Ê±ï¿½ï¿½',
+    retry_count INT DEFAULT 0 COMMENT 'ï¿½ï¿½ï¿½Ô´ï¿½ï¿½ï¿½',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_workflow (workflow_id)
@@ -18,24 +18,24 @@ CREATE TABLE IF NOT EXISTS agent_workflow_node (
 
 CREATE TABLE IF NOT EXISTS agent_workflow (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL COMMENT '¹¤×÷Á÷Ãû³Æ',
-    description VARCHAR(500) COMMENT '¹¤×÷Á÷ÃèÊö',
+    name VARCHAR(100) NOT NULL COMMENT 'ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½',
+    description VARCHAR(500) COMMENT 'ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½',
     status VARCHAR(20) DEFAULT 'draft' COMMENT '×´Ì¬: draft/active/disabled',
-    created_by VARCHAR(100) COMMENT '´´½¨ÈË',
+    created_by VARCHAR(100) COMMENT 'ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS agent_execution_log (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    workflow_id BIGINT COMMENT '¹¤×÷Á÷ID',
-    session_id VARCHAR(100) NOT NULL COMMENT '»á»°ID',
-    agent_role VARCHAR(50) NOT NULL COMMENT 'Agent½ÇÉ«',
-    input_text TEXT COMMENT 'ÊäÈëÄÚÈİ',
-    output_text TEXT COMMENT 'Êä³öÄÚÈİ',
+    workflow_id BIGINT COMMENT 'ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ID',
+    session_id VARCHAR(100) NOT NULL COMMENT 'ï¿½á»°ID',
+    agent_role VARCHAR(50) NOT NULL COMMENT 'Agentï¿½ï¿½É«',
+    input_text TEXT COMMENT 'ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½',
+    output_text TEXT COMMENT 'ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½',
     status VARCHAR(20) DEFAULT 'pending' COMMENT '×´Ì¬: pending/running/success/failed',
-    error_message TEXT COMMENT '´íÎóĞÅÏ¢',
-    duration_ms BIGINT COMMENT 'Ö´ĞĞºÄÊ±(ºÁÃë)',
+    error_message TEXT COMMENT 'ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢',
+    duration_ms BIGINT COMMENT 'Ö´ï¿½Ğºï¿½Ê±(ï¿½ï¿½ï¿½ï¿½)',
     started_at DATETIME,
     ended_at DATETIME,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS agent_execution_log (
     INDEX idx_workflow_session (workflow_id, session_id)
 );
 
--- ÓÃ»§±í
+-- ï¿½Ã»ï¿½ï¿½ï¿½
 CREATE TABLE IF NOT EXISTS sys_user (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) NOT NULL UNIQUE,
@@ -55,22 +55,42 @@ CREATE TABLE IF NOT EXISTS sys_user (
 
 CREATE TABLE IF NOT EXISTS agent_registry (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    role_name VARCHAR(50) NOT NULL UNIQUE COMMENT 'Agent½ÇÉ«Ãû³Æ',
-    display_name VARCHAR(100) COMMENT 'ÏÔÊ¾Ãû³Æ',
-    description VARCHAR(500) COMMENT 'ÃèÊö',
-    tools TEXT COMMENT '¹¤¾ßÁĞ±í(JSON)',
-    system_prompt TEXT COMMENT 'ÏµÍ³ÌáÊ¾´Ê',
-    priority INT DEFAULT 0 COMMENT 'ÓÅÏÈ¼¶',
+    role_name VARCHAR(50) NOT NULL UNIQUE COMMENT 'Agentï¿½ï¿½É«ï¿½ï¿½ï¿½ï¿½',
+    display_name VARCHAR(100) COMMENT 'ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½',
+    description VARCHAR(500) COMMENT 'ï¿½ï¿½ï¿½ï¿½',
+    tools TEXT COMMENT 'ï¿½ï¿½ï¿½ï¿½ï¿½Ğ±ï¿½(JSON)',
+    system_prompt TEXT COMMENT 'ÏµÍ³ï¿½ï¿½Ê¾ï¿½ï¿½',
+    priority INT DEFAULT 0 COMMENT 'ï¿½ï¿½ï¿½È¼ï¿½',
     status VARCHAR(20) DEFAULT 'active' COMMENT '×´Ì¬: active/inactive',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+-- LLM æä¾›å•†é…ç½®è¡¨
+CREATE TABLE IF NOT EXISTS sys_provider_config (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    provider_key VARCHAR(50) NOT NULL UNIQUE COMMENT 'æä¾›å•†å”¯ä¸€æ ‡è¯†',
+    name VARCHAR(100) NOT NULL COMMENT 'æ˜¾ç¤ºåç§°',
+    api_key VARCHAR(500) COMMENT 'APIå¯†é’¥',
+    base_url VARCHAR(500) COMMENT 'APIåŸºç¡€åœ°å€',
+    default_model VARCHAR(100) COMMENT 'é»˜è®¤æ¨¡å‹',
+    models VARCHAR(1000) COMMENT 'å¯ç”¨æ¨¡å‹åˆ—è¡¨(é€—å·åˆ†éš”)',
+    enabled BOOLEAN NOT NULL DEFAULT TRUE COMMENT 'æ˜¯å¦å¯ç”¨',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Insert default providers
+INSERT INTO sys_provider_config (provider_key, name, api_key, base_url, default_model, models, enabled) VALUES
+('openai', 'OpenAI', '', 'https://api.openai.com/v1', 'gpt-4o-mini', 'gpt-4o-mini,gpt-4o,gpt-4-turbo,gpt-3.5-turbo', TRUE),
+('deepseek', 'DeepSeek', '', 'https://api.deepseek.com', 'deepseek-chat', 'deepseek-chat,deepseek-reasoner', TRUE)
+ON DUPLICATE KEY UPDATE name=VALUES(name);
+
 -- Insert default agents
 INSERT INTO agent_registry (role_name, display_name, description, priority) VALUES
-('assistant', 'Í¨ÓÃÖúÊÖ', 'Í¨ÓÃ¶Ô»°ÖúÊÖ', 0),
-('calculator', '¼ÆËã×¨¼Ò', 'ÉÃ³¤ÊıÑ§¼ÆËã', 1),
-('weather', 'ÌìÆø×¨¼Ò', '²éÑ¯³ÇÊĞÌìÆø', 2),
-('searcher', 'ËÑË÷×¨¼Ò', 'ĞÅÏ¢ËÑË÷ºÍ²éÕÒ', 3),
-('summarizer', '×Ü½á×¨¼Ò', '×Ü½áºÍ¹éÄÉĞÅÏ¢', 4)
+('assistant', 'Í¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½', 'Í¨ï¿½Ã¶Ô»ï¿½ï¿½ï¿½ï¿½ï¿½', 0),
+('calculator', 'ï¿½ï¿½ï¿½ï¿½×¨ï¿½ï¿½', 'ï¿½Ã³ï¿½ï¿½ï¿½Ñ§ï¿½ï¿½ï¿½ï¿½', 1),
+('weather', 'ï¿½ï¿½ï¿½ï¿½×¨ï¿½ï¿½', 'ï¿½ï¿½Ñ¯ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½', 2),
+('searcher', 'ï¿½ï¿½ï¿½ï¿½×¨ï¿½ï¿½', 'ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½ï¿½Í²ï¿½ï¿½ï¿½', 3),
+('summarizer', 'ï¿½Ü½ï¿½×¨ï¿½ï¿½', 'ï¿½Ü½ï¿½Í¹ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢', 4)
 ON DUPLICATE KEY UPDATE display_name=VALUES(display_name), description=VALUES(description);

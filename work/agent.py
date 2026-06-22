@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """LangGraph Agent - 多智能体基类，支持按角色创建不同专长的 Agent"""
 import os, re, json
 from typing import Dict, Any, List, Optional
@@ -8,6 +8,7 @@ from langgraph.graph import Graph, END
 from langchain_openai import ChatOpenAI
 
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
+OPENAI_BASE_URL = os.environ.get("OPENAI_BASE_URL", "")
 OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
 
 # ========== 工具函数 ==========
@@ -113,7 +114,7 @@ def dict_to_state(d):
 def create_llm():
     if not OPENAI_API_KEY:
         return None
-    return ChatOpenAI(model=OPENAI_MODEL, temperature=0, api_key=OPENAI_API_KEY)
+    return ChatOpenAI(model=OPENAI_MODEL, temperature=0, api_key=OPENAI_API_KEY, base_url=OPENAI_BASE_URL)
 
 # ========== Mock 回复 ==========
 

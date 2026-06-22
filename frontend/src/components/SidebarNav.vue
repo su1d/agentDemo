@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <aside class="sidebar-nav">
     <div class="sidebar-header">
       <div class="sidebar-logo">

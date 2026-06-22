@@ -1,4 +1,4 @@
-﻿-- 菜单表
+-- 菜单表
 CREATE TABLE IF NOT EXISTS sys_menu (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(50) NOT NULL COMMENT '菜单名称',
@@ -16,4 +16,13 @@ INSERT INTO sys_menu (name, path, icon, parent_id, sort_order) VALUES
 ('工作流', '/workflow', 'workflow', NULL, 2),
 ('执行历史', '/history', 'history', NULL, 3),
 ('系统管理', NULL, 'setting', NULL, 99)
+ON DUPLICATE KEY UPDATE name=VALUES(name), status='active';
+
+-- 插入系统管理子菜单（依赖于系统管理菜单的ID）
+INSERT INTO sys_menu (name, path, icon, parent_id, sort_order)
+SELECT '菜单管理', '/menu-manager', 'setting', id, 1 FROM sys_menu WHERE name = '系统管理'
+ON DUPLICATE KEY UPDATE name=VALUES(name), status='active';
+
+INSERT INTO sys_menu (name, path, icon, parent_id, sort_order)
+SELECT 'LLM 提供商', '/providers', 'setting', id, 2 FROM sys_menu WHERE name = '系统管理'
 ON DUPLICATE KEY UPDATE name=VALUES(name), status='active';

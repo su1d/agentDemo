@@ -4,6 +4,7 @@ import WorkflowView from '../views/WorkflowView.vue'
 import ExecHistoryView from '../views/ExecHistoryView.vue'
 import LoginView from '../views/LoginView.vue'
 import MenuManagerView from '../views/MenuManagerView.vue'
+import ProviderSettingsView from '../views/ProviderSettingsView.vue'
 
 const routes = [
   { path: '/login', name: 'Login', component: LoginView },
@@ -12,6 +13,8 @@ const routes = [
   { path: '/workflow', name: 'Workflow', component: WorkflowView, meta: { requiresAuth: true } },
   { path: '/history', name: 'History', component: ExecHistoryView, meta: { requiresAuth: true } },
   { path: '/menu-manager', name: 'MenuManager', component: MenuManagerView, meta: { requiresAuth: true } },
+  { path: '/providers', name: 'Providers', component: ProviderSettingsView, meta: { requiresAuth: true } },
+  { path: '/settings', redirect: '/providers' },
 ]
 
 const router = createRouter({
