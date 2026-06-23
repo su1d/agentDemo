@@ -1,34 +1,12 @@
-<template>
+﻿<template>
   <div class="app-container">
-    <template v-if="isLoggedIn">
-      <div class="app-layout">
-        <SidebarNav />
-        <main class="app-main">
-          <router-view />
-        </main>
-      </div>
-    </template>
-    <router-view v-else />
+    <router-view />
   </div>
 </template>
 
-<script>
-import SidebarNav from './components/SidebarNav.vue'
-
-export default {
-  name: 'App',
-  components: { SidebarNav },
-  data() {
-    return {
-      username: localStorage.getItem('username') || '',
-    }
-  },
-  computed: {
-    isLoggedIn() {
-      return !!localStorage.getItem('token')
-    },
-  },
-}
+<script setup>
+import { useAppStore } from './stores/app'
+const store = useAppStore()
 </script>
 
 <style>
@@ -61,9 +39,7 @@ export default {
   --shadow-elevated: 0 8px 32px rgba(0,0,0,0.3);
   --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
-
 * { margin: 0; padding: 0; box-sizing: border-box; }
-
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   background: var(--bg-primary);
@@ -72,25 +48,8 @@ body {
   -moz-osx-font-smoothing: grayscale;
   line-height: 1.5;
 }
-
 #app { height: 100vh; display: flex; flex-direction: column; }
-
 .app-container { height: 100vh; display: flex; flex-direction: column; }
-.app-layout { display: flex; height: 100vh; overflow: hidden; }
-.app-main {
-  flex: 1;
-  overflow-y: auto;
-  background: var(--bg-primary);
-  background-image:
-    radial-gradient(ellipse at 20% 50%, rgba(108,92,231,0.03) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 20%, rgba(74,222,128,0.02) 0%, transparent 50%);
-}
-
-input, textarea, select, button {
-  font-family: 'Inter', sans-serif;
-}
-
-code, pre {
-  font-family: 'JetBrains Mono', monospace;
-}
+input, textarea, select, button { font-family: 'Inter', sans-serif; }
+code, pre { font-family: 'JetBrains Mono', monospace; }
 </style>

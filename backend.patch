@@ -1,0 +1,29 @@
+﻿--- D:\pj\backend\src\main\java\com\agent\service\AgentWorkerManager.java
++++ D:\pj\backend\src\main\java\com\agent\service\AgentWorkerManager.java
+@@ -19,16 +19,18 @@
+     private final Map<String, AgentWorkerService> workers = new ConcurrentHashMap<>();
+ 
+     // Injected execution service for DB logging
+     private AgentExecutionService executionService;
++    // Injected provider config for LLM API keys
++    private ProviderConfig providerConfig;
+ 
+     private static final List<String> ROLES = List.of(
+         "orchestrator", "calculator", "weather", "searcher", "summarizer"
+     );
+ 
+-    public AgentWorkerManager(AgentExecutionService executionService) {
++    public AgentWorkerManager(AgentExecutionService executionService, ProviderConfig providerConfig) {
+         this.executionService = executionService;
++        this.providerConfig = providerConfig;
+     }
+ 
+     @PostConstruct
+     public void init() {
+         for (String role : ROLES) {
+             AgentWorkerService worker = new AgentWorkerService(role);
+             worker.setExecutionService(executionService);
++            worker.setProviderConfig(providerConfig);
+             worker.start();
+             workers.put(role, worker);
+         }
