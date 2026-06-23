@@ -17,7 +17,7 @@
         </button>
       </div>
     </div>
-    <div class="office-legend">
+    <div class="office-legend glass">
       <div v-for="l in legendItems" :key="l.label" class="legend-item">
         <span class="legend-color" :style="{ background: l.color }"></span>
         <span class="legend-label">{{ l.label }}</span>
@@ -70,12 +70,8 @@ const STATUS_COLORS = {
 let scene, camera, renderer, labelRenderer, controls
 let animFrameId = null
 let clock = new THREE.Clock()
-let agentMeshes = {}
-let agentLabels = {}
-let agentRings = {}
+let agentData = {}  // { role: { group, label, ring, thrusterGlow, orbitRing, homePos, currentStatus } }
 let collaborLines = []
-let particleSystem = null
-
 let dataPackets = []
 
 const DESK_POSITIONS = [
@@ -86,7 +82,7 @@ const DESK_POSITIONS = [
   { role: 'summarizer', x: 3, z: -2.5, label: 'Summarizer' },
 ]
 
-const MEETING_ROOM_POS = { x: 0, z: 5.5 }
+// ---- exposed API ----
 
 function sendDataPacket(fromRole, toRole, color, data) {
   if (color === undefined) color = '#8b7cf7'
@@ -97,19 +93,19 @@ function sendDataPacket(fromRole, toRole, color, data) {
   const start = new THREE.Vector3(fromPos.x, 0.8, fromPos.z)
   const end = new THREE.Vector3(toPos.x, 0.8, toPos.z)
   const mid = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5)
-  mid.y += 0.6 + Math.random() * 0.6
+  mid.y += 0.8 + Math.random() * 0.8
   const curve = new THREE.QuadraticBezierCurve3(start, mid, end)
   const pColor = new THREE.Color(color)
-  const sphere = new THREE.Mesh(new THREE.SphereGeometry(0.09, 8, 8), new THREE.MeshBasicMaterial({ color: pColor, transparent: true, opacity: 1 }))
+  const sphere = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), new THREE.MeshBasicMaterial({ color: pColor, transparent: true, opacity: 1 }))
   sphere.position.copy(start); scene.add(sphere)
-  const glow = new THREE.Mesh(new THREE.SphereGeometry(0.16, 8, 8), new THREE.MeshBasicMaterial({ color: pColor, transparent: true, opacity: 0.2, blending: THREE.AdditiveBlending }))
+  const glow = new THREE.Mesh(new THREE.SphereGeometry(0.14, 8, 8), new THREE.MeshBasicMaterial({ color: pColor, transparent: true, opacity: 0.25, blending: THREE.AdditiveBlending }))
   sphere.add(glow)
-  const trailCount = 6; const trail = []
+  const trailCount = 5; const trail = []
   for (let i = 0; i < trailCount; i++) {
-    const t = new THREE.Mesh(new THREE.SphereGeometry(0.035, 4, 4), new THREE.MeshBasicMaterial({ color: pColor, transparent: true, opacity: 0.3 }))
+    const t = new THREE.Mesh(new THREE.SphereGeometry(0.03, 4, 4), new THREE.MeshBasicMaterial({ color: pColor, transparent: true, opacity: 0.3 }))
     t.visible = false; scene.add(t); trail.push(t)
   }
-  dataPackets.push({ mesh: sphere, trail, curve, progress: 0, speed: 0.006 + Math.random() * 0.003, trailCount, data })
+  dataPackets.push({ mesh: sphere, trail, curve, progress: 0, speed: 0.005 + Math.random() * 0.003, trailCount, data })
 }
 
 function clearDataPackets() {
@@ -118,21 +114,29 @@ function clearDataPackets() {
 }
 
 function sendAgentToMeeting(role, onArrive) {
-  if (!scene) return
+  const d = agentData[role]
+  if (!d || !d.group) return
   const desk = DESK_POSITIONS.find(p => p.role === role)
-  if (!desk) return; const mesh = agentMeshes[role]
-  if (!mesh) return
-  mesh.userData.meetingAnim = { startPos: new THREE.Vector3(desk.x, 0.25, desk.z), endPos: new THREE.Vector3(0, 0.25, 5.5), progress: 0, speed: 0.008 + Math.random() * 0.004, onArrive }
-  mesh.userData.isAtMeeting = true
+  if (!desk) return
+  d.meetingAnim = {
+    startPos: new THREE.Vector3(desk.x, 0.6, desk.z),
+    endPos: new THREE.Vector3(0, 0.6, 5.5),
+    progress: 0, speed: 0.008 + Math.random() * 0.004, onArrive
+  }
+  d.isAtMeeting = true
 }
 
 function returnAgentFromMeeting(role) {
-  if (!scene) return
+  const d = agentData[role]
+  if (!d || !d.group) return
   const desk = DESK_POSITIONS.find(p => p.role === role)
-  if (!desk) return; const mesh = agentMeshes[role]
-  if (!mesh) return
-  mesh.userData.meetingAnim = { startPos: new THREE.Vector3(0, 0.25, 5.5), endPos: new THREE.Vector3(desk.x, 0.25, desk.z), progress: 0, speed: 0.006, onArrive: null }
-  mesh.userData.isAtMeeting = false
+  if (!desk) return
+  d.meetingAnim = {
+    startPos: new THREE.Vector3(0, 0.6, 5.5),
+    endPos: new THREE.Vector3(desk.x, 0.6, desk.z),
+    progress: 0, speed: 0.006, onArrive: null
+  }
+  d.isAtMeeting = false
 }
 
 function showSpeechBubble(role, text, duration) {
@@ -157,31 +161,46 @@ function highlightConnection(fromRole, toRole, intensity) {
 function flashAgent(role, color, duration) {
   if (!color) color = '#ffffff'
   if (!duration) duration = 300
-  const mesh = agentMeshes[role]
-  if (!mesh) return
-  const orig = mesh.material.color.clone(); const origEm = mesh.material.emissive.clone()
-  mesh.material.color.set(color); mesh.material.emissive.set(color)
-  setTimeout(function() { if (mesh.material) { mesh.material.color.copy(orig); mesh.material.emissive.copy(origEm) } }, duration)
+  const d = agentData[role]
+  if (!d || !d.group) return
+  const core = d.group.children.find(c => c.userData.isCore)
+  if (!core) return
+  const orig = core.material.color.clone()
+  const origEm = core.material.emissive.clone()
+  core.material.color.set(color)
+  core.material.emissive.set(color)
+  setTimeout(function() { if (core.material) { core.material.color.copy(orig); core.material.emissive.copy(origEm) } }, duration)
 }
 
-function updateAgentStatus(role, status, detail) {
-  if (!scene) return
-  const mesh = agentMeshes[role]
-  if (!mesh) return
+function updateAgentStatus(role, status) {
+  const d = agentData[role]
+  if (!d) return
+  d.currentStatus = status
   const color = STATUS_COLORS[status] || STATUS_COLORS.idle
   const targetColor = new THREE.Color(color)
-  mesh.material.color.lerp(targetColor, 0.3)
 
-  const ring = agentRings[role]
-  if (ring) {
-    ring.visible = status === 'speaking' || status === 'tool_calling'
-    if (ring.visible) { ring.scale.setScalar(1); ring.material.opacity = 0.6 }
+  const core = d.group.children.find(c => c.userData.isCore)
+  if (core) {
+    core.material.color.lerp(targetColor, 0.3)
+    core.material.emissive.lerp(targetColor, 0.3)
+  }
+  const thruster = d.group.children.find(c => c.userData.isThruster)
+  if (thruster) {
+    thruster.material.color.lerp(targetColor, 0.3)
   }
 
-  if (status === 'working') mesh.userData.isWorking = true
-  else { mesh.userData.isWorking = false; mesh.position.y = 0.25 }
+  if (d.ring) {
+    d.ring.visible = status === 'speaking' || status === 'tool_calling'
+    if (d.ring.visible) { d.ring.scale.setScalar(1); d.ring.material.opacity = 0.6 }
+  }
 
-  const lbl = agentLabels[role]
+  if (status === 'working') {
+    d.isWorking = true
+  } else {
+    d.isWorking = false
+  }
+
+  const lbl = d.label
   if (lbl) {
     const statusMap = { idle: '在线', working: '工作中...', speaking: '发言中', tool_calling: '调用工具', offline: '离线' }
     const s = lbl.element.querySelector('.label-status')
@@ -194,6 +213,36 @@ function setConnectionStatus(online) {
   connectionText.value = online ? '已连接' : '离线'
 }
 
+// ---- agent movement between desks ----
+function moveAgentTo(role, targetX, targetZ, onArrive) {
+  const d = agentData[role]
+  if (!d || !d.group) return
+  const start = d.group.position.clone()
+  d.moveAnim = {
+    startPos: start,
+    endPos: new THREE.Vector3(targetX, 0.6, targetZ),
+    progress: 0, speed: 0.018 + Math.random() * 0.008,
+    onArrive, role
+  }
+}
+
+function returnAgentToDesk(role) {
+  const desk = DESK_POSITIONS.find(p => p.role === role)
+  if (!desk) return
+  moveAgentTo(role, desk.x, desk.z)
+}
+
+function getDeskX(role) {
+  const desk = DESK_POSITIONS.find(p => p.role === role)
+  return desk ? desk.x : 0
+}
+
+function getDeskZ(role) {
+  const desk = DESK_POSITIONS.find(p => p.role === role)
+  return desk ? desk.z : 0
+}
+
+// ---- scene init ----
 function initScene() {
   const el = container.value
   if (!el) return
@@ -202,14 +251,14 @@ function initScene() {
   const h = el.clientHeight
 
   scene = new THREE.Scene()
-  scene.background = new THREE.Color(0x0d0d1a)
-  scene.fog = new THREE.Fog(0x0d0d1a, 15, 25)
+  scene.background = new THREE.Color(0x080816)
+  scene.fog = new THREE.Fog(0x080816, 15, 25)
 
   camera = new THREE.PerspectiveCamera(40, w / h, 0.1, 40)
   camera.position.set(8, 6, 10)
   camera.lookAt(0, 0, 0)
 
-  renderer = new THREE.WebGLRenderer({ antialias: true })
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
   renderer.setSize(w, h)
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
   renderer.shadowMap.enabled = true
@@ -235,10 +284,10 @@ function initScene() {
   controls.update()
 
   // Lights
-  const ambient = new THREE.AmbientLight(0x2a2a4a, 0.6)
+  const ambient = new THREE.AmbientLight(0x2a2a4a, 0.5)
   scene.add(ambient)
 
-  const dirLight = new THREE.DirectionalLight(0xffeedd, 1.8)
+  const dirLight = new THREE.DirectionalLight(0xffeedd, 1.5)
   dirLight.position.set(10, 14, 8)
   dirLight.castShadow = true
   dirLight.shadow.mapSize.width = 1024
@@ -252,18 +301,18 @@ function initScene() {
   dirLight.shadow.camera.far = 25
   scene.add(dirLight)
 
-  const fillLight = new THREE.DirectionalLight(0x8888ff, 0.4)
+  const fillLight = new THREE.DirectionalLight(0x8888ff, 0.3)
   fillLight.position.set(-5, 4, -6)
   scene.add(fillLight)
 
-  // Floor
+  // Floor - refined
   const floorGeo = new THREE.PlaneGeometry(16, 16)
   const floorMat = new THREE.MeshStandardMaterial({
-    color: 0x181830,
-    roughness: 0.7,
-    metalness: 0.1,
+    color: 0x0e0e20,
+    roughness: 0.6,
+    metalness: 0.05,
     transparent: true,
-    opacity: 0.95,
+    opacity: 0.9,
   })
   const floor = new THREE.Mesh(floorGeo, floorMat)
   floor.rotation.x = -Math.PI / 2
@@ -271,23 +320,22 @@ function initScene() {
   floor.receiveShadow = true
   scene.add(floor)
 
-  // Grid
+  // Grid - subtle
   const grid = new THREE.GridHelper(16, 16, 0x6c5ce7, 0x2a2a5a)
   grid.position.y = 0.01
   grid.material.transparent = true
-  grid.material.opacity = 0.15
+  grid.material.opacity = 0.12
   scene.add(grid)
 
-  // Walls (decorative)
+  // Walls
   const wallMat = new THREE.MeshStandardMaterial({
-    color: 0x141428,
+    color: 0x0e0e20,
     roughness: 0.8,
     metalness: 0.0,
     transparent: true,
-    opacity: 0.4,
+    opacity: 0.3,
     side: THREE.DoubleSide,
   })
-
   const wallPositions = [
     { x: 0, z: -6.5, ry: 0 },
     { x: 0, z: 6.5, ry: 0 },
@@ -295,122 +343,187 @@ function initScene() {
     { x: 6.5, z: 0, ry: Math.PI / 2 },
   ]
   wallPositions.forEach(function(wp) {
-    const wg = new THREE.BoxGeometry(13, 3, 0.05)
-    const wm = new THREE.Mesh(wg, wallMat)
+    const wm = new THREE.Mesh(new THREE.BoxGeometry(13, 3, 0.05), wallMat)
     wm.position.set(wp.x, 1.5, wp.z)
     wm.rotation.y = wp.ry
     scene.add(wm)
   })
 
-  // Meeting room table
-  const tableMat = new THREE.MeshStandardMaterial({
-    color: 0x1e1e40,
-    roughness: 0.6,
-    metalness: 0.2,
-  })
-  const table = new THREE.Mesh(new THREE.CylinderGeometry(1.0, 1.2, 0.2, 24), tableMat)
-  table.position.set(0, 0.1, 5.5)
+  // Meeting room
+  const tableMat = new THREE.MeshStandardMaterial({ color: 0x1a1a3a, roughness: 0.5, metalness: 0.3 })
+  const table = new THREE.Mesh(new THREE.CylinderGeometry(1.0, 1.2, 0.15, 24), tableMat)
+  table.position.set(0, 0.075, 5.5)
   table.receiveShadow = true
   table.castShadow = true
   scene.add(table)
 
-  // Meeting room highlight ring
-  const ringGeo = new THREE.RingGeometry(1.4, 1.6, 32)
-  const ringMat = new THREE.MeshBasicMaterial({
-    color: 0x6c5ce7,
-    transparent: true,
-    opacity: 0.15,
-    side: THREE.DoubleSide,
-  })
-  const meetingRing = new THREE.Mesh(ringGeo, ringMat)
+  const meetingRing = new THREE.Mesh(
+    new THREE.RingGeometry(1.4, 1.7, 32),
+    new THREE.MeshBasicMaterial({ color: 0x6c5ce7, transparent: true, opacity: 0.1, side: THREE.DoubleSide })
+  )
   meetingRing.rotation.x = -Math.PI / 2
   meetingRing.position.set(0, 0.01, 5.5)
   scene.add(meetingRing)
 
-  // Create desks and agents
+  // Label style for meeting room
+  const labelDiv = document.createElement('div')
+  labelDiv.textContent = '会议室'
+  labelDiv.style.cssText = 'font-size:11px;font-weight:600;color:rgba(108,92,231,0.5)'
+  const meetingLabel = new CSS2DObject(labelDiv)
+  meetingLabel.position.set(0, 0.01, 6.2)
+  scene.add(meetingLabel)
+
+  // ---- Create desks and agents ----
   DESK_POSITIONS.forEach(function(dp) {
-    // Desk
+    // Desk - thin glass
     const deskMat = new THREE.MeshStandardMaterial({
-      color: 0x1a1a35,
-      roughness: 0.5,
-      metalness: 0.3,
+      color: 0x14142e,
+      roughness: 0.15,
+      metalness: 0.7,
+      transparent: true,
+      opacity: 0.8,
+      emissive: new THREE.Color(0x6c5ce7),
+      emissiveIntensity: 0.02,
     })
-    const desk = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.08, 0.9), deskMat)
-    desk.position.set(dp.x, 0.04, dp.z)
+    const desk = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.04, 0.8), deskMat)
+    desk.position.set(dp.x, 0.02, dp.z)
     desk.receiveShadow = true
     desk.castShadow = true
     scene.add(desk)
 
-    // Desk legs
-    const legMat = new THREE.MeshStandardMaterial({ color: 0x2a2a5a, metalness: 0.5, roughness: 0.4 })
-    const legPos = [[-0.6, -0.35], [0.6, -0.35], [-0.6, 0.35], [0.6, 0.35]]
-    legPos.forEach(function(lp) {
-      const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.3, 6), legMat)
-      leg.position.set(dp.x + lp[0], -0.11, dp.z + lp[1])
-      scene.add(leg)
+    // Desk border glow
+    const borderMat = new THREE.MeshBasicMaterial({
+      color: 0x6c5ce7, transparent: true, opacity: 0.08, side: THREE.DoubleSide
     })
+    const border = new THREE.Mesh(new THREE.RingGeometry(0.55, 0.6, 4), borderMat)
+    border.rotation.x = -Math.PI / 2
+    border.position.set(dp.x, 0.03, dp.z)
+    scene.add(border)
 
-    // Agent character
+    // Desk surface glow ring (subtle)
+    const surfaceGlow = new THREE.Mesh(
+      new THREE.RingGeometry(0.3, 0.5, 24),
+      new THREE.MeshBasicMaterial({ color: AGENT_COLORS[dp.role], transparent: true, opacity: 0.04, side: THREE.DoubleSide, blending: THREE.AdditiveBlending })
+    )
+    surfaceGlow.rotation.x = -Math.PI / 2
+    surfaceGlow.position.set(dp.x, 0.025, dp.z)
+    scene.add(surfaceGlow)
+
+    // ---- Agent: sleek floating drone ----
     const agColor = new THREE.Color(AGENT_COLORS[dp.role] || '#6c5ce7')
     const group = new THREE.Group()
-    group.position.set(dp.x, 0.25, dp.z)
+    group.position.set(dp.x, 0.6, dp.z)
     group.userData.role = dp.role
+    group.userData.floatOffset = Math.random() * Math.PI * 2
+    group.userData.floatSpeed = 0.5 + Math.random() * 0.3
 
-    // Body (cylinder)
-    const bodyMat = new THREE.MeshStandardMaterial({ color: agColor, roughness: 0.3, metalness: 0.4, emissive: agColor, emissiveIntensity: 0.05 })
-    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.3, 0.4, 12), bodyMat)
-    body.position.y = 0.2
-    body.castShadow = true
-    group.add(body)
-
-    // Head
-    const headMat = new THREE.MeshStandardMaterial({ color: agColor, roughness: 0.2, metalness: 0.3, emissive: agColor, emissiveIntensity: 0.1 })
-    const head = new THREE.Mesh(new THREE.SphereGeometry(0.18, 12, 10), headMat)
-    head.position.y = 0.5
-    head.castShadow = true
-    group.add(head)
-
-    // Eyes
-    const eyeMat = new THREE.MeshBasicMaterial({ color: 0xffffff })
-    const pupilMat = new THREE.MeshBasicMaterial({ color: 0x000000 })
-    ;[-0.07, 0.07].forEach(function(ex) {
-      const eye = new THREE.Mesh(new THREE.SphereGeometry(0.04, 8, 8), eyeMat)
-      eye.position.set(ex, 0.52, -0.16)
-      group.add(eye)
-      const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.02, 8, 8), pupilMat)
-      pupil.position.set(ex, 0.52, -0.19)
-      group.add(pupil)
+    // Core body - octahedron (crystal/drone look)
+    const coreMat = new THREE.MeshStandardMaterial({
+      color: agColor,
+      roughness: 0.1,
+      metalness: 0.6,
+      emissive: agColor,
+      emissiveIntensity: 0.15,
     })
+    const core = new THREE.Mesh(new THREE.OctahedronGeometry(0.18, 0), coreMat)
+    core.position.y = 0
+    core.castShadow = true
+    core.userData.isCore = true
+    group.add(core)
+
+    // Inner core glow (small sphere inside)
+    const innerGlow = new THREE.Mesh(
+      new THREE.SphereGeometry(0.08, 8, 8),
+      new THREE.MeshBasicMaterial({ color: agColor, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending })
+    )
+    innerGlow.position.y = 0
+    group.add(innerGlow)
+
+    // Orbit ring around the drone
+    const orbitRingGeo = new THREE.TorusGeometry(0.3, 0.012, 8, 24)
+    const orbitRingMat = new THREE.MeshBasicMaterial({
+      color: agColor,
+      transparent: true,
+      opacity: 0.25,
+      blending: THREE.AdditiveBlending,
+    })
+    const orbitRing = new THREE.Mesh(orbitRingGeo, orbitRingMat)
+    orbitRing.rotation.x = Math.PI / 3
+    orbitRing.rotation.z = 0.3
+    orbitRing.userData.isOrbitRing = true
+    group.add(orbitRing)
+
+    // Second orbit ring (tilted different direction)
+    const orbitRing2 = new THREE.Mesh(
+      new THREE.TorusGeometry(0.35, 0.008, 8, 24),
+      new THREE.MeshBasicMaterial({ color: agColor, transparent: true, opacity: 0.15, blending: THREE.AdditiveBlending })
+    )
+    orbitRing2.rotation.x = -Math.PI / 4
+    orbitRing2.rotation.y = 0.5
+    orbitRing2.userData.isOrbitRing = true
+    group.add(orbitRing2)
+
+    // Bottom thruster glow
+    const thrusterMat = new THREE.MeshBasicMaterial({
+      color: agColor,
+      transparent: true,
+      opacity: 0.4,
+      blending: THREE.AdditiveBlending,
+    })
+    const thruster = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.1, 6), thrusterMat)
+    thruster.position.y = -0.2
+    thruster.rotation.x = Math.PI
+    thruster.userData.isThruster = true
+    group.add(thruster)
+
+    // Small thruster glow particles (3 tiny spheres)
+    for (let i = 0; i < 3; i++) {
+      const tp = new THREE.Mesh(
+        new THREE.SphereGeometry(0.015, 4, 4),
+        new THREE.MeshBasicMaterial({ color: agColor, transparent: true, opacity: 0.2, blending: THREE.AdditiveBlending })
+      )
+      tp.position.set((i - 1) * 0.04, -0.28 + Math.random() * 0.02, 0)
+      tp.userData.isThrusterParticle = true
+      tp.userData.particleIndex = i
+      group.add(tp)
+    }
 
     scene.add(group)
-    agentMeshes[dp.role] = group
 
-    // Status ring
+    // Save agent data
+    const d = {
+      group,
+      currentStatus: 'idle',
+      isWorking: false,
+      isAtMeeting: false,
+      homePos: new THREE.Vector3(dp.x, 0.6, dp.z),
+    }
+    agentData[dp.role] = d
+
+    // Status ring (pulsing)
     const sRing = new THREE.Mesh(
-      new THREE.RingGeometry(0.35, 0.42, 24),
-      new THREE.MeshBasicMaterial({ color: agColor, transparent: true, opacity: 0, side: THREE.DoubleSide })
+      new THREE.RingGeometry(0.3, 0.36, 24),
+      new THREE.MeshBasicMaterial({ color: agColor, transparent: true, opacity: 0, side: THREE.DoubleSide, blending: THREE.AdditiveBlending })
     )
     sRing.rotation.x = -Math.PI / 2
-    sRing.position.set(dp.x, 0.01, dp.z)
+    sRing.position.set(dp.x, 0.02, dp.z)
     scene.add(sRing)
-    agentRings[dp.role] = sRing
+    d.ring = sRing
 
-    // CSS2D label
+    // CSS2D label - modern card
     const labelDiv = document.createElement('div')
     labelDiv.className = 'label-3d'
-    labelDiv.innerHTML = '<div style="text-align:center;font-size:11px;font-weight:600;color:#e8e8f0;text-shadow:0 0 8px rgba(0,0,0,0.8);background:rgba(13,13,26,0.7);padding:2px 8px;border-radius:6px;border:1px solid ' + AGENT_COLORS[dp.role] + '44;">' + dp.label + '<br><span class="label-status" style="font-size:9px;color:#4ade80;">在线</span></div>'
+    labelDiv.innerHTML = '<div style="text-align:center;font-size:11px;font-weight:600;color:#e8e8f0;text-shadow:0 0 12px rgba(0,0,0,0.9);background:linear-gradient(135deg,rgba(12,12,28,0.85),rgba(24,18,40,0.85));padding:5px 12px;border-radius:10px;border:1px solid ' + AGENT_COLORS[dp.role] + '55;box-shadow:0 0 16px ' + AGENT_COLORS[dp.role] + '22;">' + dp.label + '<br><span class="label-status" style="font-size:9px;color:#4ade80;">● 在线</span></div>'
     const lbl = new CSS2DObject(labelDiv)
-    lbl.position.set(dp.x, 1.0, dp.z)
+    lbl.position.set(dp.x, 1.3, dp.z)
     scene.add(lbl)
-    agentLabels[dp.role] = lbl
+    d.label = lbl
   })
 
-  // Initial collaboration lines
   updateCollaborationLines()
 }
 
 function updateCollaborationLines(links) {
-  // Remove existing lines
   collaborLines.forEach(function(l) { scene.remove(l); l.geometry.dispose(); l.material.dispose() })
   collaborLines = []
 
@@ -426,11 +539,10 @@ function updateCollaborationLines(links) {
     const toPos = DESK_POSITIONS.find(p => p.role === (link.to || link))
     if (!fromPos || !toPos) return
 
-    const start = new THREE.Vector3(fromPos.x, 0.15, fromPos.z)
-    const end = new THREE.Vector3(toPos.x, 0.15, toPos.z)
-
+    const start = new THREE.Vector3(fromPos.x, 0.1, fromPos.z)
+    const end = new THREE.Vector3(toPos.x, 0.1, toPos.z)
     const mid = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5)
-    mid.y += 0.2
+    mid.y += 0.15
 
     const curve = new THREE.QuadraticBezierCurve3(start, mid, end)
     const points = curve.getPoints(20)
@@ -438,8 +550,7 @@ function updateCollaborationLines(links) {
     const mat = new THREE.LineBasicMaterial({
       color: link.color || 0x6c5ce7,
       transparent: true,
-      opacity: 0.3,
-      linewidth: 1,
+      opacity: 0.25,
     })
     const line = new THREE.Line(geo, mat)
     line.userData = { from: link.from, to: link.to || link }
@@ -455,20 +566,23 @@ function resetCamera() {
   controls.update()
 }
 
+// ---- animation loop ----
 function animate() {
   animFrameId = requestAnimationFrame(animate)
   const delta = clock.getDelta()
+  const time = clock.getElapsedTime()
 
   // Animate data packets
-  dataPackets.forEach(function(p, idx) {
+  for (let i = dataPackets.length - 1; i >= 0; i--) {
+    const p = dataPackets[i]
     p.progress += p.speed
     if (p.progress > 1) {
       scene.remove(p.mesh)
       p.mesh.geometry.dispose()
       p.mesh.material.dispose()
       p.trail.forEach(function(t) { scene.remove(t); t.geometry.dispose(); t.material.dispose() })
-      dataPackets.splice(idx, 1)
-      return
+      dataPackets.splice(i, 1)
+      continue
     }
     const point = p.curve.getPoint(p.progress)
     p.mesh.position.copy(point)
@@ -483,31 +597,112 @@ function animate() {
         t.visible = false
       }
     })
-  })
+  }
 
-  // Animate agent working bounce
-  Object.keys(agentMeshes).forEach(function(role) {
-    const m = agentMeshes[role]
-    if (m.userData.isWorking && !m.userData.isAtMeeting) {
-      m.position.y = 0.25 + Math.sin(Date.now() * 0.005) * 0.04
+  // Animate agents
+  Object.keys(agentData).forEach(function(role) {
+    const d = agentData[role]
+    const grp = d.group
+    if (!grp) return
+
+    // --- Floating animation ---
+    const floatOffset = grp.userData.floatOffset || 0
+    const floatSpeed = grp.userData.floatSpeed || 0.5
+    const baseY = grp.userData._baseY || 0.6
+
+    if (!grp.userData._baseY) {
+      grp.userData._baseY = d.homePos.y
     }
-  })
 
-  // Animate meeting movement
-  Object.keys(agentMeshes).forEach(function(role) {
-    const m = agentMeshes[role]
-    const anim = m.userData.meetingAnim
-    if (anim) {
-      anim.progress += anim.speed * delta * 60
-      if (anim.progress >= 1) {
-        m.position.copy(anim.endPos)
-        m.userData.meetingAnim = null
-        if (anim.onArrive) anim.onArrive()
-      } else {
-        const t = anim.progress
-        const smooth = t * t * (3 - 2 * t)
-        m.position.lerpVectors(anim.startPos, anim.endPos, smooth)
+    // Gentle float up/down
+    const floatY = Math.sin(time * floatSpeed + floatOffset) * 0.06
+
+    // Core rotation (slow spin)
+    const core = grp.children.find(c => c.userData.isCore)
+    if (core) {
+      core.rotation.x = Math.sin(time * 0.3 + floatOffset) * 0.1
+      core.rotation.y += delta * 0.5
+    }
+
+    // Orbit ring rotation
+    grp.children.forEach(function(child) {
+      if (child.userData.isOrbitRing) {
+        child.rotation.y += delta * 0.8
+        child.rotation.z += delta * 0.3
       }
+      if (child.userData.isThrusterParticle) {
+        const idx = child.userData.particleIndex || 0
+        child.position.y = -0.28 - Math.sin(time * 2 + idx * 1.5) * 0.03
+        child.material.opacity = 0.15 + Math.sin(time * 3 + idx * 2) * 0.1
+      }
+    })
+
+    // Thruster pulse
+    const thruster = grp.children.find(c => c.userData.isThruster)
+    if (thruster) {
+      thruster.scale.setScalar(1 + Math.sin(time * 2 + floatOffset) * 0.15)
+      thruster.material.opacity = 0.3 + Math.sin(time * 2 + floatOffset) * 0.15
+    }
+
+    // --- Movement between desks ---
+    if (d.moveAnim) {
+      d.moveAnim.progress += d.moveAnim.speed * delta * 60
+      if (d.moveAnim.progress >= 1) {
+        grp.position.copy(d.moveAnim.endPos)
+        // Restore floating base
+        grp.userData._baseY = d.moveAnim.endPos.y
+        const arrived = d.moveAnim.onArrive
+        d.moveAnim = null
+        if (arrived) arrived()
+      } else {
+        const t = d.moveAnim.progress
+        const smooth = t * t * (3 - 2 * t)
+        grp.position.lerpVectors(d.moveAnim.startPos, d.moveAnim.endPos, smooth)
+        grp.userData._baseY = grp.position.y
+      }
+    }
+
+    // --- Meeting animation ---
+    if (d.meetingAnim) {
+      d.meetingAnim.progress += d.meetingAnim.speed * delta * 60
+      if (d.meetingAnim.progress >= 1) {
+        grp.position.copy(d.meetingAnim.endPos)
+        grp.userData._baseY = d.meetingAnim.endPos.y
+        const mArrived = d.meetingAnim.onArrive
+        d.meetingAnim = null
+        if (mArrived) mArrived()
+      } else {
+        const t = d.meetingAnim.progress
+        const smooth = t * t * (3 - 2 * t)
+        grp.position.lerpVectors(d.meetingAnim.startPos, d.meetingAnim.endPos, smooth)
+        grp.userData._baseY = grp.position.y
+      }
+    }
+
+    // Apply floating to Y
+    const base = grp.userData._baseY !== undefined ? grp.userData._baseY : 0.6
+    grp.position.y = base + floatY
+
+    // --- Working animation: drift toward target briefly ---
+    if (d.isWorking && !d.moveAnim && !d.meetingAnim) {
+      // Slight extra bob when working
+      grp.position.y = base + floatY + Math.sin(time * 3 + floatOffset) * 0.02
+    }
+
+    // --- Pulse ring ---
+    if (d.ring) {
+      if (d.ring.visible) {
+        const pulse = 0.5 + Math.sin(time * 2) * 0.3
+        d.ring.material.opacity = pulse * 0.6
+        d.ring.scale.setScalar(1 + Math.sin(time * 2) * 0.05)
+      }
+    }
+
+    // Update label position to follow drone
+    if (d.label) {
+      d.label.position.x = grp.position.x
+      d.label.position.z = grp.position.z
+      d.label.position.y = grp.position.y + 0.7
     }
   })
 
@@ -518,10 +713,8 @@ function animate() {
     const angle = 0.0015 * delta * 60
     const cos = Math.cos(angle)
     const sin = Math.sin(angle)
-    const x = offset.x * cos - offset.z * sin
-    const z = offset.x * sin + offset.z * cos
-    camera.position.x = pivot.x + x
-    camera.position.z = pivot.z + z
+    camera.position.x = pivot.x + offset.x * cos - offset.z * sin
+    camera.position.z = pivot.z + offset.x * sin + offset.z * cos
     camera.lookAt(pivot)
     controls.target.copy(pivot)
     controls.update()
@@ -554,7 +747,6 @@ onBeforeUnmount(function() {
   window.removeEventListener('resize', onResize)
   if (renderer) { renderer.dispose(); if (renderer.domElement && renderer.domElement.parentNode) renderer.domElement.parentNode.removeChild(renderer.domElement) }
   if (labelRenderer) { if (labelRenderer.domElement && labelRenderer.domElement.parentNode) labelRenderer.domElement.parentNode.removeChild(labelRenderer.domElement) }
-  // Clean up geometries/materials
   scene && scene.traverse(function(obj) {
     if (obj.geometry) obj.geometry.dispose()
     if (obj.material) {
@@ -576,6 +768,10 @@ defineExpose({
   setConnectionStatus,
   updateCollaborationLines,
   resetCamera,
+  moveAgentTo,
+  returnAgentToDesk,
+  getDeskX,
+  getDeskZ,
 })
 </script>
 
@@ -585,7 +781,7 @@ defineExpose({
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: #0d0d1a;
+  background: var(--bg-deep, #080816);
 }
 
 .office-toolbar {
@@ -609,8 +805,8 @@ defineExpose({
 .toolbar-title {
   font-size: 13px;
   font-weight: 600;
-  color: #e8e8f0;
-  text-shadow: 0 0 12px rgba(0,0,0,0.6);
+  color: var(--text-primary, #e8e8f0);
+  text-shadow: 0 0 12px rgba(0,0,0,0.5);
 }
 
 .toolbar-status {
@@ -622,7 +818,7 @@ defineExpose({
   background: rgba(13,13,26,0.7);
   padding: 2px 10px 2px 8px;
   border-radius: 12px;
-  border: 1px solid rgba(108,92,231,0.2);
+  border: 1px solid var(--border-color, rgba(108,92,231,0.2));
 }
 
 .status-dot {
@@ -663,7 +859,7 @@ defineExpose({
   border-radius: 8px;
   border: 1px solid rgba(108,92,231,0.2);
   background: rgba(13,13,26,0.75);
-  color: #9898b0;
+  color: var(--text-secondary, #9898b0);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -674,7 +870,7 @@ defineExpose({
 .tb-btn:hover {
   background: rgba(108,92,231,0.2);
   color: #e8e8f0;
-  border-color: rgba(108,92,231,0.4);
+  border-color: rgba(108,92,231,0.3);
 }
 
 .tb-btn.active {
@@ -690,10 +886,8 @@ defineExpose({
   display: flex;
   gap: 12px;
   z-index: 10;
-  background: rgba(13,13,26,0.75);
   padding: 6px 12px;
   border-radius: 8px;
-  border: 1px solid rgba(108,92,231,0.15);
 }
 
 .legend-item {
@@ -710,6 +904,28 @@ defineExpose({
 
 .legend-label {
   font-size: 10px;
-  color: #9898b0;
+  color: var(--text-secondary, #9898b0);
+}
+
+:deep(.label-speech) {
+  background: rgba(20,20,42,0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(108,92,231,0.2);
+  border-radius: 10px;
+  padding: 5px 12px;
+  font-size: 12px;
+  color: #e8e8f0;
+  max-width: 200px;
+  pointer-events: none;
+  white-space: nowrap;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+}
+
+:deep(.label-3d) {
+  pointer-events: none;
+  user-select: none;
 }
 </style>
+
+
+

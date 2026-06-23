@@ -1,39 +1,51 @@
 ﻿<template>
   <div class="app-shell">
-    <!-- Top Navigation Bar -->
-    <header class="topbar">
+    <header class="topbar glass-strong">
       <div class="topbar-left">
         <div class="brand" @click="$router.push('/dashboard')">
-          <svg width="28" height="28" viewBox="0 0 48 48" fill="none">
-            <rect width="48" height="48" rx="12" fill="currentColor" fill-opacity="0.15"/>
-            <path d="M16 24C16 19.58 19.58 16 24 16c4.42 0 8 3.58 8 8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
-            <path d="M24 20v4" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
-            <circle cx="24" cy="28" r="2" fill="currentColor"/>
-          </svg>
+          <div class="brand-icon">
+            <svg width="24" height="24" viewBox="0 0 48 48" fill="none">
+              <rect width="48" height="48" rx="12" fill="currentColor" fill-opacity="0.12"/>
+              <path d="M16 24C16 19.58 19.58 16 24 16c4.42 0 8 3.58 8 8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+              <path d="M24 20v4" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+              <circle cx="24" cy="28" r="2" fill="currentColor"/>
+            </svg>
+          </div>
           <span class="brand-name">AgentForge</span>
         </div>
+        <div class="brand-divider"></div>
       </div>
 
       <nav class="topbar-nav">
-        <router-link v-for="item in navItems" :key="item.path" :to="item.path" class="nav-item" :class="{ active: isActive(item.path) }">
-          <component :is="item.icon" :size="16" />
+        <router-link
+          v-for="item in navItems"
+          :key="item.path"
+          :to="item.path"
+          class="nav-item"
+          :class="{ active: isActive(item.path) }"
+        >
+          <component :is="item.icon" :size="15" />
           <span>{{ item.label }}</span>
         </router-link>
       </nav>
 
       <div class="topbar-right">
-        <div class="user-badge">
+        <div class="user-badge glass">
           <div class="user-avatar">{{ store.username.charAt(0).toUpperCase() }}</div>
           <span class="user-name">{{ store.username }}</span>
         </div>
         <button class="logout-btn" @click="handleLogout" title="退出登录">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
         </button>
       </div>
     </header>
 
     <main class="main-content">
-      <router-view />
+      <router-view v-slot="{ Component }">
+        <transition name="page" mode="out-in">
+          <component :is="Component" />
+        </transition>
+      </router-view>
     </main>
   </div>
 </template>
@@ -67,38 +79,162 @@ async function handleLogout() {
 </script>
 
 <style scoped>
-.app-shell { display: flex; flex-direction: column; height: 100vh; overflow: hidden; background: #0d0d1a; }
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--bg-deep);
+}
 
 .topbar {
-  display: flex; align-items: center; gap: 8px;
-  height: 52px; padding: 0 16px;
-  background: #141428;
-  border-bottom: 1px solid rgba(108,92,231,0.15);
+  display: flex;
+  align-items: center;
+  height: 54px;
+  padding: 0 16px;
   flex-shrink: 0;
+  position: relative;
+  z-index: 100;
 }
 
-.topbar-left { display: flex; align-items: center; }
-.brand { display: flex; align-items: center; gap: 8px; cursor: pointer; color: #6c5ce7; margin-right: 24px; }
-.brand-name { font-size: 16px; font-weight: 800; color: #e8e8f0; letter-spacing: -0.3px; }
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
 
-.topbar-nav { display: flex; align-items: center; gap: 2px; flex: 1; }
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  color: var(--accent);
+}
+
+.brand-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(108,92,231,0.1);
+  color: var(--accent);
+}
+
+.brand-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.3px;
+}
+
+.brand-divider {
+  width: 1px;
+  height: 24px;
+  background: var(--border-color);
+}
+
+.topbar-nav {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+  padding-left: 12px;
+}
+
 .nav-item {
-  display: flex; align-items: center; gap: 6px;
-  padding: 6px 12px; border-radius: 6px;
-  color: #9898b0; text-decoration: none;
-  font-size: 13px; font-weight: 500;
-  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  transition: var(--transition);
+  position: relative;
 }
-.nav-item:hover { background: rgba(108,92,231,0.06); color: #e8e8f0; }
-.nav-item.active { background: rgba(108,92,231,0.12); color: #6c5ce7; }
 
-.topbar-right { display: flex; align-items: center; gap: 8px; }
-.user-badge { display: flex; align-items: center; gap: 6px; padding: 4px 8px; background: #1a1a30; border-radius: 6px; }
-.user-avatar { width: 24px; height: 24px; border-radius: 5px; background: linear-gradient(135deg, #6c5ce7, #a78bfa); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
-.user-name { font-size: 12px; color: #e8e8f0; }
+.nav-item:hover {
+  background: rgba(108,92,231,0.06);
+  color: var(--text-primary);
+}
 
-.logout-btn { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(108,92,231,0.15); border-radius: 6px; background: transparent; color: #68687d; cursor: pointer; transition: all 0.15s; }
-.logout-btn:hover { background: rgba(248,113,113,0.1); border-color: rgba(248,113,113,0.3); color: #f87171; }
+.nav-item.active {
+  background: rgba(108,92,231,0.1);
+  color: var(--accent);
+}
 
-.main-content { flex: 1; overflow-y: auto; }
+.nav-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--accent);
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.user-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px 5px 6px;
+  border-radius: 8px;
+}
+
+.user-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, var(--accent), var(--pink));
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.user-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.logout-btn {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.logout-btn:hover {
+  background: var(--red-bg);
+  border-color: rgba(248,113,113,0.25);
+  color: var(--red);
+}
+
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+  position: relative;
+}
 </style>

@@ -1,11 +1,8 @@
-<template>
+﻿<template>
   <div class="providers-page">
     <div class="page-header">
       <h2>
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="3"/>
-          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-        </svg>
+        <Settings :size="20" />
         LLM 提供商
       </h2>
     </div>
@@ -14,7 +11,7 @@
       <div
         v-for="provider in providers"
         :key="provider.key"
-        class="provider-card"
+        class="provider-card glass card-hover"
         :class="{ 'provider-active': provider.enabled }"
       >
         <div class="provider-header">
@@ -49,14 +46,8 @@
                 :disabled="!editing[provider.key]"
               />
               <button class="toggle-key" @click="toggleKey(provider.key)">
-                <svg v-if="showKeys[provider.key]" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19M14.12 14.12a3 3 0 1 1-4.24-4.24"/>
-                  <line x1="1" y1="1" x2="23" y2="23"/>
-                </svg>
-                <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                  <circle cx="12" cy="12" r="3"/>
-                </svg>
+                <EyeOff v-if="showKeys[provider.key]" :size="16" />
+                <Eye v-else :size="16" />
               </button>
             </div>
           </div>
@@ -96,10 +87,13 @@
 </template>
 
 <script>
+import { Settings, Eye, EyeOff } from '@lucide/vue'
+
 const API_BASE = 'http://localhost:8080/api'
 
 export default {
   name: 'ProviderSettingsView',
+  components: { Settings, Eye, EyeOff },
   emits: ['notify'],
   data() {
     return {
@@ -191,20 +185,13 @@ export default {
 .providers-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
-  gap: 20px;
+  gap: 16px;
 }
 
 .provider-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   overflow: hidden;
   transition: var(--transition);
-}
-
-.provider-card:hover {
-  border-color: var(--border-active);
-  box-shadow: 0 4px 20px var(--accent-glow);
 }
 
 .provider-card.provider-active {
@@ -237,7 +224,6 @@ export default {
   border-radius: 4px;
   font-size: 11px;
   font-weight: 600;
-  text-transform: uppercase;
   letter-spacing: 0.3px;
 }
 
@@ -247,8 +233,8 @@ export default {
 }
 
 .badge-off {
-  background: rgba(248, 113, 113, 0.1);
-  color: #f87171;
+  background: var(--red-bg);
+  color: var(--red);
 }
 
 .provider-key {
@@ -256,7 +242,7 @@ export default {
   color: var(--text-muted);
   font-family: monospace;
   padding: 3px 8px;
-  background: var(--bg-secondary);
+  background: rgba(16,16,30,0.5);
   border-radius: 4px;
 }
 
@@ -284,9 +270,9 @@ export default {
 .provider-input,
 .provider-select {
   padding: 9px 12px;
-  background: var(--bg-secondary);
+  background: rgba(16,16,30,0.5);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   color: var(--text-primary);
   font-size: 13px;
   font-family: inherit;
@@ -298,7 +284,7 @@ export default {
 .provider-input:focus,
 .provider-select:focus {
   outline: none;
-  border-color: var(--accent);
+  border-color: var(--border-active);
   box-shadow: 0 0 0 3px var(--accent-glow);
 }
 
@@ -320,9 +306,9 @@ export default {
 
 .toggle-key {
   padding: 8px;
-  background: var(--bg-secondary);
+  background: rgba(16,16,30,0.5);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   color: var(--text-muted);
   display: flex;
@@ -333,7 +319,7 @@ export default {
 
 .toggle-key:hover {
   color: var(--text-primary);
-  border-color: var(--border-active);
+  border-color: var(--border-light);
 }
 
 .provider-footer {
@@ -361,7 +347,7 @@ export default {
 .toggle-slider {
   position: absolute;
   inset: 0;
-  background: var(--bg-secondary);
+  background: rgba(16,16,30,0.5);
   border: 1px solid var(--border-color);
   border-radius: 11px;
   transition: var(--transition);
@@ -397,7 +383,7 @@ export default {
 .btn-save,
 .btn-cancel {
   padding: 7px 16px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -411,7 +397,7 @@ export default {
 }
 
 .btn-edit:hover {
-  background: var(--accent-glow);
+  background: var(--accent-dim);
 }
 
 .btn-save {
@@ -430,7 +416,7 @@ export default {
 }
 
 .btn-cancel:hover {
-  background: var(--bg-secondary);
+  background: rgba(16,16,30,0.5);
   color: var(--text-primary);
 }
 </style>

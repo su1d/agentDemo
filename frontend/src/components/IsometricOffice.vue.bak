@@ -2,17 +2,17 @@
   <div ref="container" class="iso-office-container">
     <div class="office-toolbar">
       <div class="toolbar-left">
-        <span class="toolbar-title">鏁板瓧瀛敓鍔炲叕瀹?/span>
+        <span class="toolbar-title">数字孪生办公室</span>
         <span class="toolbar-status" :class="connectionClass">
           <span class="status-dot"></span>
           {{ connectionText }}
         </span>
       </div>
       <div class="toolbar-right">
-        <button class="tb-btn" @click="resetCamera" title="閲嶇疆瑙嗚">
+        <button class="tb-btn" @click="resetCamera" title="重置视角">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
         </button>
-        <button class="tb-btn" @click="autoRotate = !autoRotate" :class="{ active: autoRotate }" title="鑷姩鏃嬭浆">
+        <button class="tb-btn" @click="autoRotate = !autoRotate" :class="{ active: autoRotate }" title="自动旋转">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
         </button>
       </div>
@@ -25,6 +25,7 @@
     </div>
   </div>
 </template>
+
 <script setup>
 import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import * as THREE from 'three'
@@ -39,14 +40,15 @@ const props = defineProps({
 
 const container = ref(null)
 const connectionClass = ref('connecting')
-const connectionText = ref('杩炴帴涓?..')
+const connectionText = ref('连接中...')
 const autoRotate = ref(props.autoRotate)
 
 const legendItems = [
-  { color: '#4ade80', label: '鍦ㄧ嚎 / 宸ヤ綔涓? },
-  { color: '#60a5fa', label: '鍙戣█涓? },
-  { color: '#fb923c', label: '宸ュ叿璋冪敤' },
-  { color: '#f87171', label: '绂荤嚎' },
+  { color: '#4ade80', label: '在线 / 工作中' },
+  { color: '#60a5fa', label: '发言中' },
+  { color: '#fb923c', label: '工具调用' },
+  { color: '#f87171', label: '离线' },
+  { color: '#8b7cf7', label: '数据包' },
 ]
 
 const AGENT_COLORS = {
@@ -74,6 +76,8 @@ let agentRings = {}
 let collaborLines = []
 let particleSystem = null
 
+let dataPackets = []
+
 const DESK_POSITIONS = [
   { role: 'orchestrator', x: 0, z: 0, label: 'Orchestrator' },
   { role: 'calculator', x: -3, z: 2.5, label: 'Calculator' },
@@ -83,6 +87,82 @@ const DESK_POSITIONS = [
 ]
 
 const MEETING_ROOM_POS = { x: 0, z: 5.5 }
+
+function sendDataPacket(fromRole, toRole, color, data) {
+  if (color === undefined) color = '#8b7cf7'
+  if (data === undefined) data = ''
+  const fromPos = DESK_POSITIONS.find(p => p.role === fromRole)
+  const toPos = DESK_POSITIONS.find(p => p.role === toRole)
+  if (!fromPos || !toPos || !scene) return
+  const start = new THREE.Vector3(fromPos.x, 0.8, fromPos.z)
+  const end = new THREE.Vector3(toPos.x, 0.8, toPos.z)
+  const mid = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5)
+  mid.y += 0.6 + Math.random() * 0.6
+  const curve = new THREE.QuadraticBezierCurve3(start, mid, end)
+  const pColor = new THREE.Color(color)
+  const sphere = new THREE.Mesh(new THREE.SphereGeometry(0.09, 8, 8), new THREE.MeshBasicMaterial({ color: pColor, transparent: true, opacity: 1 }))
+  sphere.position.copy(start); scene.add(sphere)
+  const glow = new THREE.Mesh(new THREE.SphereGeometry(0.16, 8, 8), new THREE.MeshBasicMaterial({ color: pColor, transparent: true, opacity: 0.2, blending: THREE.AdditiveBlending }))
+  sphere.add(glow)
+  const trailCount = 6; const trail = []
+  for (let i = 0; i < trailCount; i++) {
+    const t = new THREE.Mesh(new THREE.SphereGeometry(0.035, 4, 4), new THREE.MeshBasicMaterial({ color: pColor, transparent: true, opacity: 0.3 }))
+    t.visible = false; scene.add(t); trail.push(t)
+  }
+  dataPackets.push({ mesh: sphere, trail, curve, progress: 0, speed: 0.006 + Math.random() * 0.003, trailCount, data })
+}
+
+function clearDataPackets() {
+  dataPackets.forEach(p => { scene.remove(p.mesh); p.mesh.geometry.dispose(); p.mesh.material.dispose(); p.trail.forEach(t => { scene.remove(t); t.geometry.dispose(); t.material.dispose() }) })
+  dataPackets = []
+}
+
+function sendAgentToMeeting(role, onArrive) {
+  if (!scene) return
+  const desk = DESK_POSITIONS.find(p => p.role === role)
+  if (!desk) return; const mesh = agentMeshes[role]
+  if (!mesh) return
+  mesh.userData.meetingAnim = { startPos: new THREE.Vector3(desk.x, 0.25, desk.z), endPos: new THREE.Vector3(0, 0.25, 5.5), progress: 0, speed: 0.008 + Math.random() * 0.004, onArrive }
+  mesh.userData.isAtMeeting = true
+}
+
+function returnAgentFromMeeting(role) {
+  if (!scene) return
+  const desk = DESK_POSITIONS.find(p => p.role === role)
+  if (!desk) return; const mesh = agentMeshes[role]
+  if (!mesh) return
+  mesh.userData.meetingAnim = { startPos: new THREE.Vector3(0, 0.25, 5.5), endPos: new THREE.Vector3(desk.x, 0.25, desk.z), progress: 0, speed: 0.006, onArrive: null }
+  mesh.userData.isAtMeeting = false
+}
+
+function showSpeechBubble(role, text, duration) {
+  if (duration === undefined) duration = 2500
+  if (!scene) return
+  const desk = DESK_POSITIONS.find(p => p.role === role)
+  if (!desk) return
+  const div = document.createElement('div'); div.className = 'label-3d label-speech'; div.textContent = text
+  const lbl = new CSS2DObject(div); lbl.position.set(desk.x, 2.2 + Math.random() * 0.3, desk.z); scene.add(lbl)
+  setTimeout(function() { if (lbl.parent) scene.remove(lbl) }, duration)
+}
+
+function highlightConnection(fromRole, toRole, intensity) {
+  if (intensity === undefined) intensity = 1.0
+  collaborLines.forEach(function(l) {
+    const active = l.userData && l.userData.from === fromRole && l.userData.to === toRole
+    l.material.opacity = active ? 0.9 * intensity : 0.3
+    if (active) l.material.color.set('#a78bfa'); else l.material.color.set('#6c5ce7')
+  })
+}
+
+function flashAgent(role, color, duration) {
+  if (!color) color = '#ffffff'
+  if (!duration) duration = 300
+  const mesh = agentMeshes[role]
+  if (!mesh) return
+  const orig = mesh.material.color.clone(); const origEm = mesh.material.emissive.clone()
+  mesh.material.color.set(color); mesh.material.emissive.set(color)
+  setTimeout(function() { if (mesh.material) { mesh.material.color.copy(orig); mesh.material.emissive.copy(origEm) } }, duration)
+}
 
 function updateAgentStatus(role, status, detail) {
   if (!scene) return
@@ -103,7 +183,7 @@ function updateAgentStatus(role, status, detail) {
 
   const lbl = agentLabels[role]
   if (lbl) {
-    const statusMap = { idle: '鍦ㄧ嚎', working: '宸ヤ綔涓?..', speaking: '鍙戣█涓?, tool_calling: '璋冪敤宸ュ叿', offline: '绂荤嚎' }
+    const statusMap = { idle: '在线', working: '工作中...', speaking: '发言中', tool_calling: '调用工具', offline: '离线' }
     const s = lbl.element.querySelector('.label-status')
     if (s) { s.textContent = statusMap[status] || status; s.style.color = color }
   }
@@ -111,208 +191,606 @@ function updateAgentStatus(role, status, detail) {
 
 function setConnectionStatus(online) {
   connectionClass.value = online ? 'online' : 'offline'
-  connectionText.value = online ? '宸茶繛鎺? : '绂荤嚎'
+  connectionText.value = online ? '已连接' : '离线'
+}
+
+function initScene() {
+  const el = container.value
+  if (!el) return
+
+  const w = el.clientWidth
+  const h = el.clientHeight
+
+  scene = new THREE.Scene()
+  scene.background = new THREE.Color(0x0d0d1a)
+  scene.fog = new THREE.Fog(0x0d0d1a, 15, 25)
+
+  camera = new THREE.PerspectiveCamera(40, w / h, 0.1, 40)
+  camera.position.set(8, 6, 10)
+  camera.lookAt(0, 0, 0)
+
+  renderer = new THREE.WebGLRenderer({ antialias: true })
+  renderer.setSize(w, h)
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+  renderer.shadowMap.enabled = true
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap
+  renderer.toneMapping = THREE.ACESFilmicToneMapping
+  renderer.toneMappingExposure = 1.2
+  el.appendChild(renderer.domElement)
+
+  labelRenderer = new CSS2DRenderer()
+  labelRenderer.setSize(w, h)
+  labelRenderer.domElement.style.position = 'absolute'
+  labelRenderer.domElement.style.top = '0'
+  labelRenderer.domElement.style.pointerEvents = 'none'
+  el.appendChild(labelRenderer.domElement)
+
+  controls = new OrbitControls(camera, renderer.domElement)
+  controls.enableDamping = true
+  controls.dampingFactor = 0.08
+  controls.minDistance = 4
+  controls.maxDistance = 22
+  controls.maxPolarAngle = Math.PI / 2.2
+  controls.target.set(0, 0.5, 0)
+  controls.update()
+
+  // Lights
+  const ambient = new THREE.AmbientLight(0x2a2a4a, 0.6)
+  scene.add(ambient)
+
+  const dirLight = new THREE.DirectionalLight(0xffeedd, 1.8)
+  dirLight.position.set(10, 14, 8)
+  dirLight.castShadow = true
+  dirLight.shadow.mapSize.width = 1024
+  dirLight.shadow.mapSize.height = 1024
+  const d = 12
+  dirLight.shadow.camera.left = -d
+  dirLight.shadow.camera.right = d
+  dirLight.shadow.camera.top = d
+  dirLight.shadow.camera.bottom = -d
+  dirLight.shadow.camera.near = 1
+  dirLight.shadow.camera.far = 25
+  scene.add(dirLight)
+
+  const fillLight = new THREE.DirectionalLight(0x8888ff, 0.4)
+  fillLight.position.set(-5, 4, -6)
+  scene.add(fillLight)
+
+  // Floor
+  const floorGeo = new THREE.PlaneGeometry(16, 16)
+  const floorMat = new THREE.MeshStandardMaterial({
+    color: 0x181830,
+    roughness: 0.7,
+    metalness: 0.1,
+    transparent: true,
+    opacity: 0.95,
+  })
+  const floor = new THREE.Mesh(floorGeo, floorMat)
+  floor.rotation.x = -Math.PI / 2
+  floor.position.y = -0.01
+  floor.receiveShadow = true
+  scene.add(floor)
+
+  // Grid
+  const grid = new THREE.GridHelper(16, 16, 0x6c5ce7, 0x2a2a5a)
+  grid.position.y = 0.01
+  grid.material.transparent = true
+  grid.material.opacity = 0.15
+  scene.add(grid)
+
+  // Walls (decorative)
+  const wallMat = new THREE.MeshStandardMaterial({
+    color: 0x141428,
+    roughness: 0.8,
+    metalness: 0.0,
+    transparent: true,
+    opacity: 0.4,
+    side: THREE.DoubleSide,
+  })
+
+  const wallPositions = [
+    { x: 0, z: -6.5, ry: 0 },
+    { x: 0, z: 6.5, ry: 0 },
+    { x: -6.5, z: 0, ry: Math.PI / 2 },
+    { x: 6.5, z: 0, ry: Math.PI / 2 },
+  ]
+  wallPositions.forEach(function(wp) {
+    const wg = new THREE.BoxGeometry(13, 3, 0.05)
+    const wm = new THREE.Mesh(wg, wallMat)
+    wm.position.set(wp.x, 1.5, wp.z)
+    wm.rotation.y = wp.ry
+    scene.add(wm)
+  })
+
+  // Meeting room table
+  const tableMat = new THREE.MeshStandardMaterial({
+    color: 0x1e1e40,
+    roughness: 0.6,
+    metalness: 0.2,
+  })
+  const table = new THREE.Mesh(new THREE.CylinderGeometry(1.0, 1.2, 0.2, 24), tableMat)
+  table.position.set(0, 0.1, 5.5)
+  table.receiveShadow = true
+  table.castShadow = true
+  scene.add(table)
+
+  // Meeting room highlight ring
+  const ringGeo = new THREE.RingGeometry(1.4, 1.6, 32)
+  const ringMat = new THREE.MeshBasicMaterial({
+    color: 0x6c5ce7,
+    transparent: true,
+    opacity: 0.15,
+    side: THREE.DoubleSide,
+  })
+  const meetingRing = new THREE.Mesh(ringGeo, ringMat)
+  meetingRing.rotation.x = -Math.PI / 2
+  meetingRing.position.set(0, 0.01, 5.5)
+  scene.add(meetingRing)
+
+  // Create desks and agents
+  DESK_POSITIONS.forEach(function(dp) {
+    // Desk - modern glass top
+    const deskMat = new THREE.MeshStandardMaterial({
+      color: 0x1a1a40,
+      roughness: 0.2,
+      metalness: 0.6,
+      transparent: true,
+      opacity: 0.85,
+      emissive: new THREE.Color(0x6c5ce7),
+      emissiveIntensity: 0.03,
+    })
+    const desk = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.06, 1.0), deskMat)
+    desk.position.set(dp.x, 0.03, dp.z)
+    desk.receiveShadow = true
+    desk.castShadow = true
+    scene.add(desk)
+
+    // Desk glow border (thin ring around desk)
+    const borderMat = new THREE.MeshBasicMaterial({
+      color: 0x6c5ce7,
+      transparent: true,
+      opacity: 0.1,
+      side: THREE.DoubleSide,
+    })
+    const border = new THREE.Mesh(new THREE.RingGeometry(0.75, 0.85, 4), borderMat)
+    border.rotation.x = -Math.PI / 2
+    border.position.set(dp.x, 0.04, dp.z)
+    scene.add(border)
+
+    // Desk legs - slim chrome
+    const legMat = new THREE.MeshStandardMaterial({ color: 0x4a4a8a, metalness: 0.8, roughness: 0.2 })
+    const legPos = [[-0.65, -0.4], [0.65, -0.4], [-0.65, 0.4], [0.65, 0.4]]
+    legPos.forEach(function(lp) {
+      const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.3, 8), legMat)
+      leg.position.set(dp.x + lp[0], -0.11, dp.z + lp[1])
+      scene.add(leg)
+    })
+
+    // Agent character - cute chibi-style
+    const agColor = new THREE.Color(AGENT_COLORS[dp.role] || '#6c5ce7')
+    const group = new THREE.Group()
+    group.position.set(dp.x, 0.25, dp.z)
+    group.userData.role = dp.role
+
+    // Glow aura beneath
+    const auraMat = new THREE.MeshBasicMaterial({
+      color: agColor,
+      transparent: true,
+      opacity: 0.08,
+      side: THREE.DoubleSide,
+      blending: THREE.AdditiveBlending,
+    })
+    const aura = new THREE.Mesh(new THREE.CircleGeometry(0.5, 16), auraMat)
+    aura.rotation.x = -Math.PI / 2
+    aura.position.y = 0.01
+    group.add(aura)
+
+    // Body - capsule shape (rounded cylinder)
+    const bodyMat = new THREE.MeshStandardMaterial({
+      color: agColor,
+      roughness: 0.2,
+      metalness: 0.3,
+      emissive: agColor,
+      emissiveIntensity: 0.08,
+    })
+    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.22, 0.35, 12), bodyMat)
+    body.position.y = 0.18
+    body.castShadow = true
+    group.add(body)
+
+    // Body accent stripe
+    const stripeMat = new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0.15,
+    })
+    const stripe = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.2, 0.04, 12), stripeMat)
+    stripe.position.y = 0.2
+    group.add(stripe)
+
+    // Head - slightly larger, cuter
+    const headMat = new THREE.MeshStandardMaterial({
+      color: agColor,
+      roughness: 0.15,
+      metalness: 0.2,
+      emissive: agColor,
+      emissiveIntensity: 0.12,
+    })
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.2, 14, 12), headMat)
+    head.position.y = 0.48
+    head.scale.set(1, 0.95, 1)
+    head.castShadow = true
+    group.add(head)
+
+    // Head highlight shine
+    const shineMat = new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0.06,
+    })
+    const shine = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 6), shineMat)
+    shine.position.set(-0.07, 0.53, 0.1)
+    group.add(shine)
+
+    // Eyes - big cute anime style
+    const eyeWhiteMat = new THREE.MeshBasicMaterial({ color: 0xffffff })
+    const pupilMat = new THREE.MeshBasicMaterial({ color: 0x1a1a2e })
+    const highlightMat = new THREE.MeshBasicMaterial({ color: 0xffffff })
+
+    ;[-0.08, 0.08].forEach(function(ex) {
+      // Eye white
+      const eye = new THREE.Mesh(new THREE.SphereGeometry(0.055, 10, 10), eyeWhiteMat)
+      eye.position.set(ex, 0.495, -0.17)
+      eye.scale.set(1, 1.1, 0.7)
+      group.add(eye)
+
+      // Pupil
+      const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 8), pupilMat)
+      pupil.position.set(ex, 0.495, -0.19)
+      group.add(pupil)
+
+      // Eye highlight
+      const hl = new THREE.Mesh(new THREE.SphereGeometry(0.014, 6, 6), highlightMat)
+      hl.position.set(ex + 0.018, 0.505, -0.195)
+      group.add(hl)
+    })
+
+    // Smile (small arc using ring segment)
+    const smileMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5, side: THREE.DoubleSide })
+    const smile = new THREE.Mesh(new THREE.RingGeometry(0.05, 0.058, 4, 0, Math.PI), smileMat)
+    smile.position.set(0, 0.45, -0.17)
+    smile.rotation.x = 0.1
+    smile.rotation.z = 0.1
+    group.add(smile)
+
+    scene.add(group)
+    agentMeshes[dp.role] = group
+
+    // Status ring - pulsing ring
+    const sRing = new THREE.Mesh(
+      new THREE.RingGeometry(0.32, 0.38, 24),
+      new THREE.MeshBasicMaterial({ color: agColor, transparent: true, opacity: 0, side: THREE.DoubleSide, blending: THREE.AdditiveBlending })
+    )
+    sRing.rotation.x = -Math.PI / 2
+    sRing.position.set(dp.x, 0.01, dp.z)
+    scene.add(sRing)
+    agentRings[dp.role] = sRing
+
+    // CSS2D label - styled card
+    const labelDiv = document.createElement('div')
+    labelDiv.className = 'label-3d'
+    labelDiv.innerHTML = '<div style="text-align:center;font-size:11px;font-weight:600;color:#e8e8f0;text-shadow:0 0 8px rgba(0,0,0,0.8);background:linear-gradient(135deg,rgba(20,20,40,0.85),rgba(30,20,50,0.85));padding:4px 10px;border-radius:8px;border:1px solid ' + AGENT_COLORS[dp.role] + '66;box-shadow:0 0 12px ' + AGENT_COLORS[dp.role] + '22;">' + dp.label + '<br><span class="label-status" style="font-size:9px;color:#4ade80;">● 在线</span></div>'
+    const lbl = new CSS2DObject(labelDiv)
+    lbl.position.set(dp.x, 1.0, dp.z)
+    scene.add(lbl)
+    agentLabels[dp.role] = lbl
+  })
+  // Initial collaboration lines
+  updateCollaborationLines()
 }
 
 function updateCollaborationLines(links) {
-  collaborLines.forEach(l => { scene.remove(l); l.geometry.dispose(); l.material.dispose() })
+  // Remove existing lines
+  collaborLines.forEach(function(l) { scene.remove(l); l.geometry.dispose(); l.material.dispose() })
   collaborLines = []
-  if (particleSystem) { scene.remove(particleSystem); particleSystem.geometry.dispose(); particleSystem.material.dispose(); particleSystem = null }
-  if (!links || links.length === 0) return
-  const positions = []
-  links.forEach(link => {
+
+  const defaultLinks = links || [
+    { from: 'orchestrator', to: 'calculator' },
+    { from: 'orchestrator', to: 'weather' },
+    { from: 'orchestrator', to: 'searcher' },
+    { from: 'orchestrator', to: 'summarizer' },
+  ]
+
+  defaultLinks.forEach(function(link) {
     const fromPos = DESK_POSITIONS.find(p => p.role === link.from)
-    const toPos = DESK_POSITIONS.find(p => p.role === link.to)
+    const toPos = DESK_POSITIONS.find(p => p.role === (link.to || link))
     if (!fromPos || !toPos) return
-    const curve = new THREE.LineCurve3(new THREE.Vector3(fromPos.x, 0.3, fromPos.z), new THREE.Vector3(toPos.x, 0.3, toPos.z))
-    const pts = curve.getPoints(20)
-    const geometry = new THREE.BufferGeometry().setFromPoints(pts)
-    const material = new THREE.LineDashedMaterial({ color: link.color || '#6c5ce7', dashSize: 0.15, gapSize: 0.1, transparent: true, opacity: 0.6 })
-    const line = new THREE.Line(geometry, material)
-    line.computeLineDistances(); scene.add(line); collaborLines.push(line)
-    pts.forEach(p => positions.push(p.x, p.y, p.z))
+
+    const start = new THREE.Vector3(fromPos.x, 0.15, fromPos.z)
+    const end = new THREE.Vector3(toPos.x, 0.15, toPos.z)
+
+    const mid = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5)
+    mid.y += 0.2
+
+    const curve = new THREE.QuadraticBezierCurve3(start, mid, end)
+    const points = curve.getPoints(20)
+    const geo = new THREE.BufferGeometry().setFromPoints(points)
+    const mat = new THREE.LineBasicMaterial({
+      color: link.color || 0x6c5ce7,
+      transparent: true,
+      opacity: 0.3,
+      linewidth: 1,
+    })
+    const line = new THREE.Line(geo, mat)
+    line.userData = { from: link.from, to: link.to || link }
+    scene.add(line)
+    collaborLines.push(line)
   })
-  if (positions.length > 0) {
-    const particleGeo = new THREE.BufferGeometry()
-    particleGeo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
-    particleSystem = new THREE.Points(particleGeo, new THREE.PointsMaterial({ color: '#8b7cf7', size: 0.08, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending }))
-    scene.add(particleSystem)
-  }
 }
 
 function resetCamera() {
   if (!controls) return
-  controls.target.set(0, 0, 0)
-  camera.position.set(8, 7, 8)
+  camera.position.set(8, 6, 10)
+  controls.target.set(0, 0.5, 0)
   controls.update()
 }
 
-function initScene() {
-  if (!container.value) return
-  const rect = container.value.getBoundingClientRect()
-  const w = rect.width || 800; const h = rect.height || 500
-  scene = new THREE.Scene(); scene.background = new THREE.Color(0x0d0d1a); scene.fog = new THREE.Fog(0x0d0d1a, 12, 18)
-  const aspect = w / h; const vs = 8
-  camera = new THREE.OrthographicCamera(-vs * aspect, vs * aspect, vs, -vs, 0.1, 50)
-  camera.position.set(8, 7, 8); camera.lookAt(0, 0, 0)
-  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
-  renderer.setSize(w, h); renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap
-  renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.2
-  container.value.appendChild(renderer.domElement)
-  labelRenderer = new CSS2DRenderer()
-  labelRenderer.setSize(w, h)
-  labelRenderer.domElement.style.position = 'absolute'; labelRenderer.domElement.style.top = '0'; labelRenderer.domElement.style.pointerEvents = 'none'
-  container.value.appendChild(labelRenderer.domElement)
-  controls = new OrbitControls(camera, renderer.domElement)
-  controls.enableDamping = true; controls.dampingFactor = 0.08; controls.target.set(0, 0, 0); controls.minZoom = 3; controls.maxZoom = 20; controls.update()
-
-  scene.add(new THREE.AmbientLight(0x404060, 0.5))
-  const dl = new THREE.DirectionalLight(0xffffff, 1.2); dl.position.set(5, 10, 7); dl.castShadow = true; dl.shadow.mapSize.width = 1024; dl.shadow.mapSize.height = 1024; scene.add(dl)
-  const fl = new THREE.DirectionalLight(0x6c5ce7, 0.3); fl.position.set(-5, 3, -5); scene.add(fl)
-  const rl = new THREE.DirectionalLight(0x60a5fa, 0.4); rl.position.set(0, -3, 8); scene.add(rl)
-
-  createFloor(); createRoomWalls(); createMeetingRoom(); createDesks(); createAgents(); createDecorations()
-  animate(); window.addEventListener('resize', onResize)
-}
-
-function createFloor() {
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(16, 14), new THREE.MeshStandardMaterial({ color: 0x0d0d1a, roughness: 0.8, metalness: 0.1, side: THREE.DoubleSide }))
-  floor.rotation.x = -Math.PI / 2; floor.position.y = -0.05; floor.receiveShadow = true; scene.add(floor)
-  const grid = new THREE.GridHelper(14, 14, 0x6c5ce7, 0x2a2a4a)
-  grid.material.transparent = true; grid.material.opacity = 0.15; grid.position.y = 0.01; scene.add(grid)
-}
-
-function createRoomWalls() {
-  const mat = new THREE.MeshStandardMaterial({ color: 0x141428, transparent: true, opacity: 0.3, side: THREE.DoubleSide, roughness: 0.6, metalness: 0.3 })
-  const h = 2.5; [[0, h/2, -7, 16, h, 0.1],[0, h/2, 7, 16, h, 0.1],[-8, h/2, 0, 0.1, h, 14],[8, h/2, 0, 0.1, h, 14]].forEach(w => {
-    const m = new THREE.Mesh(new THREE.BoxGeometry(w[3], w[4], w[5]), mat); m.position.set(w[0], w[1], w[2]); scene.add(m)
-  })
-}
-
-function createMeetingRoom() {
-  const { x, z } = MEETING_ROOM_POS
-  const gm = new THREE.MeshPhysicalMaterial({ color: 0x6c5ce7, transparent: true, opacity: 0.08, roughness: 0.1, side: THREE.DoubleSide })
-  [[x-1.2, 1.8/2, z, 0.05, 1.8, 2.4],[x+1.2, 1.8/2, z, 0.05, 1.8, 2.4],[x, 1.8/2, z-1.2, 2.4, 1.8, 0.05]].forEach(p => {
-    const m = new THREE.Mesh(new THREE.BoxGeometry(p[3], p[4], p[5]), gm); m.position.set(p[0], p[1], p[2]); scene.add(m)
-  })
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 2.2), new THREE.MeshStandardMaterial({ color: 0x1a1a35, roughness: 0.3, metalness: 0.6, transparent: true, opacity: 0.5, side: THREE.DoubleSide }))
-  floor.rotation.x = -Math.PI / 2; floor.position.set(x, 0.01, z); scene.add(floor)
-  const table = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.08, 1), new THREE.MeshStandardMaterial({ color: 0x2a2a50, roughness: 0.4, metalness: 0.2 }))
-  table.position.set(x, 0.2, z); table.castShadow = true; scene.add(table)
-  const div = document.createElement('div'); div.className = 'label-3d label-meeting'; div.innerHTML = '<span>浼氳瀹?/span>'
-  const lbl = new CSS2DObject(div); lbl.position.set(x, 2.2, z); scene.add(lbl)
-}
-
-function createDesks() {
-  DESK_POSITIONS.forEach(({ role, x, z }) => {
-    const g = new THREE.Group(); g.position.set(x, 0, z)
-    const base = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.3, 0.8), new THREE.MeshStandardMaterial({ color: 0x1a1a30, roughness: 0.5, metalness: 0.3 }))
-    base.position.y = 0.15; base.castShadow = true; base.receiveShadow = true; g.add(base)
-    const glow = new THREE.Mesh(new THREE.BoxGeometry(1.25, 0.02, 0.85), new THREE.MeshBasicMaterial({ color: 0x6c5ce7, transparent: true, opacity: 0.05 }))
-    glow.position.y = 0.31; g.add(glow)
-    const fm = new THREE.MeshStandardMaterial({ color: 0x3a3a5a, metalness: 0.5, roughness: 0.3 })
-    ;[[-0.5, 0.05, -0.35],[0.5, 0.05, -0.35],[-0.5, 0.05, 0.35],[0.5, 0.05, 0.35]].forEach(fp => {
-      const foot = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 0.1), fm); foot.position.set(fp[0], fp[1], fp[2]); g.add(foot)
-    })
-    scene.add(g)
-  })
-}
-
-function createAgents() {
-  DESK_POSITIONS.forEach(({ role, x, z, label }) => {
-    const color = new THREE.Color(AGENT_COLORS[role] || '#6c5ce7')
-    const g = new THREE.Group(); g.position.set(x, 0.6, z); scene.add(g)
-    const body = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), new THREE.MeshPhysicalMaterial({ color, roughness: 0.2, metalness: 0.6, clearcoat: 0.3, clearcoatRoughness: 0.4, emissive: color, emissiveIntensity: 0.15 }))
-    body.castShadow = true; body.position.y = 0.25; body.userData.role = role; g.add(body)
-    const head = new THREE.Mesh(new THREE.SphereGeometry(0.18, 16, 16), new THREE.MeshPhysicalMaterial({ color, roughness: 0.15, metalness: 0.5, emissive: color, emissiveIntensity: 0.2 }))
-    head.position.y = 0.55; head.castShadow = true; g.add(head)
-    const am = new THREE.MeshBasicMaterial({ color: 0x4ade80 })
-    const ant = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.15), am); ant.position.y = 0.7; g.add(ant)
-    const tip = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 8), am); tip.position.y = 0.78; g.add(tip)
-    const ring = new THREE.Mesh(new THREE.RingGeometry(0.3, 0.45, 32), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false }))
-    ring.rotation.x = -Math.PI / 2; ring.position.y = 0.02; ring.visible = false; g.add(ring)
-    agentMeshes[role] = body; agentRings[role] = ring
-    const gf = new THREE.Mesh(new THREE.CircleGeometry(0.6, 24), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.08 }))
-    gf.rotation.x = -Math.PI / 2; gf.position.y = 0.01; g.add(gf)
-    const div = document.createElement('div'); div.className = 'label-3d'
-    const rm = { orchestrator: 'Orchestrator', calculator: 'Calculator', weather: 'Weather', searcher: 'Searcher', summarizer: 'Summarizer' }
-    div.innerHTML = '<div class="label-name">' + (rm[role] || label) + '</div><div class="label-status" style="color:#4ade80">鍦ㄧ嚎</div>'
-    const lbl = new CSS2DObject(div); lbl.position.set(x, 1.6, z); scene.add(lbl); agentLabels[role] = lbl
-  })
-}
-
-function createDecorations() {
-  const pm = new THREE.MeshStandardMaterial({ color: 0x1a5c3a, roughness: 0.8 })
-  const pt = new THREE.MeshStandardMaterial({ color: 0x3a3a5a, roughness: 0.6, metalness: 0.2 })
-  ;[[-6, -4],[6, -4],[-6, 4],[6, 4]].forEach(([px, pz]) => {
-    const g = new THREE.Group(); g.position.set(px, 0, pz)
-    const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.15, 0.2), pt); pot.position.y = 0.1; g.add(pot)
-    for (let i = 0; i < 5; i++) {
-      const leaf = new THREE.Mesh(new THREE.SphereGeometry(0.08 + Math.random() * 0.08, 6, 6), pm)
-      const a = (i / 5) * Math.PI * 2; const r = 0.1 + Math.random() * 0.08
-      leaf.position.set(Math.cos(a) * r, 0.25 + Math.random() * 0.1, Math.sin(a) * r); g.add(leaf)
-    }
-    scene.add(g)
-  })
-  const pc = 150; const pg = new THREE.BufferGeometry(); const pp = new Float32Array(pc * 3)
-  for (let i = 0; i < pc * 3; i++) { pp[i] = (Math.random() - 0.5) * 16; if (i % 3 === 1) pp[i] = Math.random() * 3 }
-  pg.setAttribute('position', new THREE.BufferAttribute(pp, 3))
-  scene.add(new THREE.Points(pg, new THREE.PointsMaterial({ color: 0x6c5ce7, size: 0.03, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending, depthWrite: false })))
-}
-
 function animate() {
-  animFrameId = requestAnimationFrame(animate); const t = clock.getElapsedTime()
-  Object.values(agentMeshes).forEach(m => { if (m.userData.isWorking) m.position.y = 0.25 + Math.sin(t * 3 + (m.userData.role || '').length) * 0.03 })
-  Object.entries(agentRings).forEach(([, r]) => { if (r.visible) { const s = 1 + Math.sin(t * 2) * 0.3; r.scale.setScalar(s); r.material.opacity = 0.3 + Math.sin(t * 2) * 0.2 } })
-  collaborLines.forEach(l => { l.material.dashOffset -= 0.03 })
-  if (particleSystem) { const pos = particleSystem.geometry.attributes.position.array; for (let i = 1; i < pos.length; i += 3) pos[i] += Math.sin(t * 0.5 + i) * 0.001; particleSystem.geometry.attributes.position.needsUpdate = true }
-  if (autoRotate.value && controls) { const r = Math.sqrt(camera.position.x**2 + camera.position.z**2); const a = Math.atan2(camera.position.z, camera.position.x) + 0.0004; camera.position.x = r * Math.cos(a); camera.position.z = r * Math.sin(a); camera.lookAt(controls.target) }
-  controls.update(); renderer.render(scene, camera); labelRenderer.render(scene, camera)
+  animFrameId = requestAnimationFrame(animate)
+  const delta = clock.getDelta()
+
+  // Animate data packets
+  dataPackets.forEach(function(p, idx) {
+    p.progress += p.speed
+    if (p.progress > 1) {
+      scene.remove(p.mesh)
+      p.mesh.geometry.dispose()
+      p.mesh.material.dispose()
+      p.trail.forEach(function(t) { scene.remove(t); t.geometry.dispose(); t.material.dispose() })
+      dataPackets.splice(idx, 1)
+      return
+    }
+    const point = p.curve.getPoint(p.progress)
+    p.mesh.position.copy(point)
+
+    p.trail.forEach(function(t, ti) {
+      const tp = p.progress - (ti + 1) * 0.04
+      if (tp > 0) {
+        const tp2 = p.curve.getPoint(tp)
+        t.position.copy(tp2)
+        t.visible = true
+      } else {
+        t.visible = false
+      }
+    })
+  })
+
+  // Animate agent working bounce
+  Object.keys(agentMeshes).forEach(function(role) {
+    const m = agentMeshes[role]
+    if (m.userData.isWorking && !m.userData.isAtMeeting) {
+      m.position.y = 0.25 + Math.sin(Date.now() * 0.005) * 0.04
+    }
+  })
+
+  // Animate meeting movement
+  Object.keys(agentMeshes).forEach(function(role) {
+    const m = agentMeshes[role]
+    const anim = m.userData.meetingAnim
+    if (anim) {
+      anim.progress += anim.speed * delta * 60
+      if (anim.progress >= 1) {
+        m.position.copy(anim.endPos)
+        m.userData.meetingAnim = null
+        if (anim.onArrive) anim.onArrive()
+      } else {
+        const t = anim.progress
+        const smooth = t * t * (3 - 2 * t)
+        m.position.lerpVectors(anim.startPos, anim.endPos, smooth)
+      }
+    }
+  })
+
+  // Auto-rotate
+  if (autoRotate.value && controls) {
+    const pivot = new THREE.Vector3(0, 0.5, 0)
+    const offset = new THREE.Vector3().copy(camera.position).sub(pivot)
+    const angle = 0.0015 * delta * 60
+    const cos = Math.cos(angle)
+    const sin = Math.sin(angle)
+    const x = offset.x * cos - offset.z * sin
+    const z = offset.x * sin + offset.z * cos
+    camera.position.x = pivot.x + x
+    camera.position.z = pivot.z + z
+    camera.lookAt(pivot)
+    controls.target.copy(pivot)
+    controls.update()
+  }
+
+  controls.update()
+  renderer.render(scene, camera)
+  labelRenderer.render(scene, camera)
 }
 
 function onResize() {
-  if (!container.value || !camera || !renderer || !labelRenderer) return
-  const rect = container.value.getBoundingClientRect(); const w = rect.width || 800; const h = rect.height || 500; const aspect = w / h; const vs = 8
-  camera.left = -vs * aspect; camera.right = vs * aspect; camera.top = vs; camera.bottom = -vs; camera.updateProjectionMatrix()
-  renderer.setSize(w, h); labelRenderer.setSize(w, h)
+  if (!container.value || !renderer || !labelRenderer) return
+  const w = container.value.clientWidth
+  const h = container.value.clientHeight
+  camera.aspect = w / h
+  camera.updateProjectionMatrix()
+  renderer.setSize(w, h)
+  labelRenderer.setSize(w, h)
 }
 
-onMounted(() => { nextTick(() => initScene()) })
-onBeforeUnmount(() => { if (animFrameId) cancelAnimationFrame(animFrameId); window.removeEventListener('resize', onResize); renderer?.dispose(); renderer?.domElement?.remove(); labelRenderer?.domElement?.remove() })
+onMounted(async function() {
+  await nextTick()
+  initScene()
+  animate()
+  window.addEventListener('resize', onResize)
+})
 
-defineExpose({ updateAgentStatus, setConnectionStatus, updateCollaborationLines, resetCamera })
+onBeforeUnmount(function() {
+  if (animFrameId) cancelAnimationFrame(animFrameId)
+  window.removeEventListener('resize', onResize)
+  if (renderer) { renderer.dispose(); if (renderer.domElement && renderer.domElement.parentNode) renderer.domElement.parentNode.removeChild(renderer.domElement) }
+  if (labelRenderer) { if (labelRenderer.domElement && labelRenderer.domElement.parentNode) labelRenderer.domElement.parentNode.removeChild(labelRenderer.domElement) }
+  // Clean up geometries/materials
+  scene && scene.traverse(function(obj) {
+    if (obj.geometry) obj.geometry.dispose()
+    if (obj.material) {
+      if (Array.isArray(obj.material)) obj.material.forEach(function(m) { m.dispose() })
+      else obj.material.dispose()
+    }
+  })
+})
+
+defineExpose({
+  sendDataPacket,
+  clearDataPackets,
+  sendAgentToMeeting,
+  returnAgentFromMeeting,
+  showSpeechBubble,
+  highlightConnection,
+  flashAgent,
+  updateAgentStatus,
+  setConnectionStatus,
+  updateCollaborationLines,
+  resetCamera,
+})
 </script>
 
 <style scoped>
-.iso-office-container { position: relative; width: 100%; height: 100%; overflow: hidden; background: #0d0d1a; border-radius: 12px; }
-.office-toolbar { position: absolute; top: 0; left: 0; right: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; background: linear-gradient(180deg, rgba(13,13,26,0.8) 0%, transparent 100%); pointer-events: none; }
-.office-toolbar * { pointer-events: auto; }
-.toolbar-left { display: flex; align-items: center; gap: 10px; }
-.toolbar-title { font-size: 14px; font-weight: 700; color: #e8e8f0; letter-spacing: -0.2px; }
-.toolbar-status { display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 8px; }
-.toolbar-status .status-dot { width: 5px; height: 5px; border-radius: 50%; }
-.toolbar-status.online { background: rgba(74,222,128,0.1); color: #4ade80; }
-.toolbar-status.online .status-dot { background: #4ade80; box-shadow: 0 0 4px rgba(74,222,128,0.5); }
-.toolbar-status.offline { background: rgba(248,113,113,0.1); color: #f87171; }
-.toolbar-status.offline .status-dot { background: #f87171; }
-.toolbar-status.connecting { background: rgba(250,204,21,0.1); color: #facc15; }
-.toolbar-status.connecting .status-dot { background: #facc15; animation: pulse 1s infinite; }
-@keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.3} }
-.toolbar-right { display: flex; gap: 4px; }
-.tb-btn { width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(108,92,231,0.15); border-radius: 6px; background: rgba(20,20,40,0.8); color: #9898b0; cursor: pointer; transition: all 0.15s; }
-.tb-btn:hover { background: rgba(108,92,231,0.1); color: #e8e8f0; border-color: rgba(108,92,231,0.3); }
-.tb-btn.active { background: rgba(108,92,231,0.15); color: #6c5ce7; border-color: rgba(108,92,231,0.3); }
-.office-legend { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); z-index: 10; display: flex; gap: 14px; padding: 6px 14px; background: rgba(20,20,40,0.8); backdrop-filter: blur(8px); border: 1px solid rgba(108,92,231,0.12); border-radius: 20px; }
-.legend-item { display: flex; align-items: center; gap: 5px; font-size: 10px; color: #9898b0; font-weight: 500; }
-.legend-color { width: 6px; height: 6px; border-radius: 50%; }
-</style>
+.iso-office-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #0d0d1a;
+}
 
-<style>
-.label-3d { font-family: 'Inter', -apple-system, sans-serif; text-align: center; background: rgba(13,13,26,0.7); backdrop-filter: blur(6px); padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(108,92,231,0.15); pointer-events: none; user-select: none; }
-.label-name { font-size: 10px; font-weight: 600; color: #e8e8f0; line-height: 1.3; }
-.label-status { font-size: 9px; font-weight: 500; line-height: 1.2; }
-.label-meeting { background: rgba(108,92,231,0.12); border-color: rgba(108,92,231,0.25); }
-.label-meeting span { font-size: 11px; font-weight: 600; color: #8b7cf7; }
+.office-toolbar {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.toolbar-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #e8e8f0;
+  text-shadow: 0 0 12px rgba(0,0,0,0.6);
+}
+
+.toolbar-status {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: #68687d;
+  background: rgba(13,13,26,0.7);
+  padding: 2px 10px 2px 8px;
+  border-radius: 12px;
+  border: 1px solid rgba(108,92,231,0.2);
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #68687d;
+}
+
+.toolbar-status.online .status-dot {
+  background: #4ade80;
+  box-shadow: 0 0 6px rgba(74,222,128,0.5);
+}
+
+.toolbar-status.online {
+  color: #4ade80;
+  border-color: rgba(74,222,128,0.3);
+}
+
+.toolbar-status.offline .status-dot {
+  background: #f87171;
+}
+
+.toolbar-status.offline {
+  color: #f87171;
+  border-color: rgba(248,113,113,0.3);
+}
+
+.toolbar-right {
+  display: flex;
+  gap: 4px;
+  pointer-events: auto;
+}
+
+.tb-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid rgba(108,92,231,0.2);
+  background: rgba(13,13,26,0.75);
+  color: #9898b0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.tb-btn:hover {
+  background: rgba(108,92,231,0.2);
+  color: #e8e8f0;
+  border-color: rgba(108,92,231,0.4);
+}
+
+.tb-btn.active {
+  background: rgba(108,92,231,0.25);
+  color: #6c5ce7;
+  border-color: rgba(108,92,231,0.5);
+}
+
+.office-legend {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  display: flex;
+  gap: 12px;
+  z-index: 10;
+  background: rgba(13,13,26,0.75);
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(108,92,231,0.15);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.legend-color {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.legend-label {
+  font-size: 10px;
+  color: #9898b0;
+}
 </style>
 

@@ -2,10 +2,10 @@
   <div class="login-page">
     <div class="login-bg"></div>
     <div class="login-container">
-      <div class="login-card">
+      <div class="login-card glass-strong">
         <div class="login-brand">
-          <div class="brand-icon">
-            <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+          <div class="brand-icon-wrap">
+            <svg width="44" height="44" viewBox="0 0 48 48" fill="none">
               <rect width="48" height="48" rx="14" fill="#6c5ce7" fill-opacity="0.15"/>
               <path d="M16 24C16 19.58 19.58 16 24 16C28.42 16 32 19.58 32 24" stroke="#6c5ce7" stroke-width="2.5" stroke-linecap="round"/>
               <path d="M24 20V24" stroke="#6c5ce7" stroke-width="2.5" stroke-linecap="round"/>
@@ -13,11 +13,11 @@
               <path d="M14 32C14 27.58 17.58 24 22 24H26C30.42 24 34 27.58 34 32" stroke="#8b7cf7" stroke-width="2" stroke-linecap="round" stroke-dasharray="3 3"/>
             </svg>
           </div>
-          <h1 class="brand-title">Multi-Agent System</h1>
-          <p class="brand-subtitle">智能协作平台</p>
+          <h1 class="brand-title">AgentForge</h1>
+          <p class="brand-subtitle">多智能体协作平台</p>
         </div>
 
-        <div class="login-tabs">
+        <div class="login-tabs glass">
           <button :class="['tab-btn', tab === 'login' ? 'active' : '']" @click="tab = 'login'">登录</button>
           <button :class="['tab-btn', tab === 'register' ? 'active' : '']" @click="tab = 'register'">注册</button>
         </div>
@@ -25,15 +25,15 @@
         <form @submit.prevent="handleSubmit" class="login-form">
           <div class="form-group">
             <label>用户名</label>
-            <div class="input-wrapper">
-              <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 22c0-4.42 3.58-8 8-8s8 3.58 8 8"/></svg>
+            <div class="input-wrapper glass">
+              <svg class="input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 22c0-4.42 3.58-8 8-8s8 3.58 8 8"/></svg>
               <input v-model="form.username" type="text" placeholder="请输入用户名" required />
             </div>
           </div>
           <div class="form-group">
             <label>密码</label>
-            <div class="input-wrapper">
-              <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <div class="input-wrapper glass">
+              <svg class="input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
               <input v-model="form.password" type="password" placeholder="请输入密码" required />
             </div>
           </div>
@@ -90,7 +90,7 @@ async function handleSubmit() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg-primary);
+  background: var(--bg-deep);
   position: relative;
   overflow: hidden;
 }
@@ -114,12 +114,9 @@ async function handleSubmit() {
 }
 
 .login-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
   border-radius: var(--radius-xl);
-  padding: 40px 32px;
-  backdrop-filter: blur(20px);
-  box-shadow: var(--shadow-elevated);
+  padding: 44px 36px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.4);
 }
 
 .login-brand {
@@ -127,13 +124,13 @@ async function handleSubmit() {
   margin-bottom: 32px;
 }
 
-.brand-icon {
+.brand-icon-wrap {
   display: inline-flex;
   margin-bottom: 16px;
 }
 
 .brand-title {
-  font-size: 24px;
+  font-size: 26px;
   font-weight: 800;
   color: var(--text-primary);
   margin-bottom: 4px;
@@ -148,9 +145,8 @@ async function handleSubmit() {
 
 .login-tabs {
   display: flex;
-  gap: 6px;
+  gap: 4px;
   margin-bottom: 24px;
-  background: var(--bg-secondary);
   padding: 4px;
   border-radius: var(--radius-sm);
 }
@@ -159,7 +155,7 @@ async function handleSubmit() {
   flex: 1;
   padding: 8px 16px;
   border: none;
-  border-radius: 6px;
+  border-radius: 5px;
   background: transparent;
   color: var(--text-secondary);
   font-size: 14px;
@@ -196,6 +192,8 @@ async function handleSubmit() {
   position: relative;
   display: flex;
   align-items: center;
+  border-radius: var(--radius-sm);
+  padding: 0;
 }
 
 .input-icon {
@@ -207,23 +205,17 @@ async function handleSubmit() {
 
 .form-group input {
   width: 100%;
-  padding: 10px 12px 10px 36px;
-  border: 1px solid var(--border-color);
+  padding: 11px 12px 11px 38px;
+  border: none;
   border-radius: var(--radius-sm);
-  background: var(--bg-secondary);
+  background: transparent;
   color: var(--text-primary);
   font-size: 14px;
   outline: none;
-  transition: var(--transition);
-}
-
-.form-group input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-glow);
 }
 
 .form-group input::placeholder {
-  color: var(--text-muted);
+  color: var(--text-dim);
 }
 
 .error-msg {
@@ -257,7 +249,7 @@ async function handleSubmit() {
 
 .submit-btn:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(108,92,231,0.3);
+  box-shadow: 0 6px 20px rgba(108,92,231,0.35);
 }
 
 .submit-btn:active:not(:disabled) {
