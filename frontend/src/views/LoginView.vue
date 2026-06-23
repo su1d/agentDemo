@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="login-page">
     <div class="login-bg"></div>
     <div class="login-container">
@@ -55,36 +55,32 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import { login, register } from '../auth'
+import { useAppStore } from '../stores/app'
+import { useRouter } from 'vue-router'
+import { ref, reactive } from 'vue'
 
-export default {
-  name: 'LoginView',
-  data() {
-    return {
-      tab: 'login',
-      form: { username: '', password: '' },
-      loading: false,
-      error: '',
-    }
-  },
-  methods: {
-    async handleSubmit() {
-      this.error = ''
-      this.loading = true
-      try {
-        const fn = this.tab === 'login' ? login : register
-        const res = await fn(this.form.username, this.form.password)
-        localStorage.setItem('token', res.token)
-        localStorage.setItem('username', res.username)
-        this.$router.push('/')
-      } catch (e) {
-        this.error = e.message || '操作失败，请重试'
-      } finally {
-        this.loading = false
-      }
-    },
-  },
+const appStore = useAppStore()
+const router = useRouter()
+const tab = ref('login')
+const form = reactive({ username: '', password: '' })
+const loading = ref(false)
+const error = ref('')
+
+async function handleSubmit() {
+  error.value = ''
+  loading.value = true
+  try {
+    const fn = tab.value === 'login' ? login : register
+    const res = await fn(form.username, form.password)
+    appStore.setAuth(res.token, res.username)
+    router.push('/')
+  } catch (e) {
+    error.value = e.message || '操作失败，请重试'
+  } finally {
+    loading.value = false
+  }
 }
 </script>
 

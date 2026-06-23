@@ -1,9 +1,10 @@
 package com.agent.config;
 
+import com.agent.entity.SysProviderConfig;
 import com.agent.entity.SysMenu;
 import com.agent.repository.SysMenuRepository;
 import com.agent.repository.SysProviderConfigRepository;
-import com.agent.entity.SysProviderConfig;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
@@ -12,10 +13,28 @@ public class DataInitializer implements CommandLineRunner {
 
     private final SysMenuRepository menuRepository;
     private final SysProviderConfigRepository providerConfigRepository;
+    private final String openaiApiKey;
+    private final String openaiBaseUrl;
+    private final String openaiModel;
+    private final String deepseekApiKey;
+    private final String deepseekBaseUrl;
+    private final String deepseekModel;
 
-    public DataInitializer(SysMenuRepository menuRepository, SysProviderConfigRepository providerConfigRepository) {
+    public DataInitializer(SysMenuRepository menuRepository, SysProviderConfigRepository providerConfigRepository,
+                           @Value("${openai.api-key:}") String openaiApiKey,
+                           @Value("${openai.base-url:https://api.deepseek.com}") String openaiBaseUrl,
+                           @Value("${openai.model:deepseek-chat}") String openaiModel,
+                           @Value("${deepseek.api-key:}") String deepseekApiKey,
+                           @Value("${deepseek.base-url:https://api.deepseek.com}") String deepseekBaseUrl,
+                           @Value("${deepseek.model:deepseek-chat}") String deepseekModel) {
         this.menuRepository = menuRepository;
         this.providerConfigRepository = providerConfigRepository;
+        this.openaiApiKey = openaiApiKey;
+        this.openaiBaseUrl = openaiBaseUrl;
+        this.openaiModel = openaiModel;
+        this.deepseekApiKey = deepseekApiKey;
+        this.deepseekBaseUrl = deepseekBaseUrl;
+        this.deepseekModel = deepseekModel;
     }
 
     @Override
@@ -26,7 +45,6 @@ public class DataInitializer implements CommandLineRunner {
 
     private void initMenus() {
         if (menuRepository.count() > 0) {
-            // Already have menus — just ensure the provider settings sub-menu exists.
             SysMenu system = menuRepository.findByName("系统管理").orElse(null);
             if (system != null && menuRepository.findByName("LLM 提供商").isEmpty()) {
                 menuRepository.save(new SysMenu("LLM 提供商", "/providers", "setting", system.getId(), 2));
@@ -48,26 +66,23 @@ public class DataInitializer implements CommandLineRunner {
 
     private void initDefaultProviders() {
         if (providerConfigRepository.count() > 0) {
-            return; // already initialized
+            return;
         }
-
-        String openaiKey = System.getenv("OPENAI_API_KEY");
-        String deepseekKey = System.getenv("DEEPSEEK_API_KEY");
 
         providerConfigRepository.save(new SysProviderConfig(
             "openai", "OpenAI",
-            openaiKey != null ? openaiKey : "",
-            "https://api.openai.com/v1",
-            "gpt-4o-mini",
+            openaiApiKey != null && !openaiApiKey.isEmpty() ? openaiApiKey : "",
+            openaiBaseUrl,
+            openaiModel,
             "gpt-4o-mini,gpt-4o,gpt-4-turbo,gpt-3.5-turbo",
             true
         ));
 
         providerConfigRepository.save(new SysProviderConfig(
             "deepseek", "DeepSeek",
-            deepseekKey != null ? deepseekKey : "",
-            "https://api.deepseek.com",
-            "deepseek-chat",
+            deepseekApiKey != null && !deepseekApiKey.isEmpty() ? deepseekApiKey : "",
+            deepseekBaseUrl,
+            deepseekModel,
             "deepseek-chat,deepseek-reasoner",
             true
         ));

@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="workflow-editor-page">
     <div class="editor-toolbar">
       <button class="back-btn" @click="$router.push('/workflow')">
@@ -130,6 +130,12 @@ async function loadWorkflow(id) {
   } catch (e) { console.error(e) }
 }
 
+function addNode(type) {
+  const labels = { start: '开始', task: '新任务', condition: '条件判断', parallel: '并行分支', merge: '合并节点', end: '结束' }
+  const id = 'n_' + Date.now()
+  const pos = { x: 100 + Math.random() * 200, y: 100 + Math.random() * 200 }
+  nodes.value = [...nodes.value, { id, type, position: pos, data: { label: labels[type] || type } }]
+}
 async function saveWorkflow() {
   const body = {
     name: workflowName.value || '未命名工作流',
@@ -185,6 +191,25 @@ async function executeWorkflow() {
 .exec-btn { background: linear-gradient(135deg, #10b981, #34d399); color: #fff; }
 .exec-btn:hover:not(:disabled) { box-shadow: 0 4px 12px rgba(16,185,129,0.3); }
 .exec-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.node-palette {
+  position: absolute; left: 12px; top: 12px; z-index: 10;
+  background: #1a1a30; border: 1px solid rgba(108,92,231,0.15); border-radius: 10px;
+  padding: 10px; display: flex; flex-direction: column; gap: 6px; min-width: 80px;
+}
+.palette-title { font-size: 10px; font-weight: 600; color: #68687d; text-transform: uppercase; letter-spacing: 0.3px; text-align: center; margin-bottom: 2px; }
+.palette-items { display: flex; flex-direction: column; gap: 4px; }
+.palette-item {
+  padding: 6px 10px; border-radius: 5px; font-size: 11px; font-weight: 500;
+  cursor: pointer; transition: all 0.15s; text-align: center;
+  border: 1px solid rgba(108,92,231,0.15); background: #141428; color: #9898b0;
+}
+.palette-item:hover { border-color: #6c5ce7; color: #6c5ce7; background: rgba(108,92,231,0.06); }
+.palette-item.start { border-left: 3px solid #4ade80; }
+.palette-item.task { border-left: 3px solid #6c5ce7; }
+.palette-item.condition { border-left: 3px solid #facc15; }
+.palette-item.parallel { border-left: 3px solid #fb923c; }
+.palette-item.merge { border-left: 3px solid #a855f7; }
+.palette-item.end { border-left: 3px solid #f87171; }
 .flow-container { flex: 1; position: relative; overflow: hidden; }
 .config-panel { position: fixed; right: 16px; top: 64px; width: 280px; background: #1a1a30; border: 1px solid rgba(108,92,231,0.15); border-radius: 12px; z-index: 100; box-shadow: 0 8px 32px rgba(0,0,0,0.3); overflow: hidden; }
 .config-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-bottom: 1px solid rgba(108,92,231,0.15); }

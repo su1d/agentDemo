@@ -5,6 +5,8 @@ import com.agent.repository.SysProviderConfigRepository;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +32,7 @@ public class ProviderConfigService {
     /**
      * Get API key for a provider, falling back to OPENAI_API_KEY env var.
      */
+    @Cacheable(value = "providers", key = "'apiKey:' + #providerKey", unless = "#result == null")
     public String getApiKey(String providerKey) {
         return repository.findByProviderKey(providerKey)
             .filter(SysProviderConfig::isEnabled)
@@ -43,6 +46,7 @@ public class ProviderConfigService {
     /**
      * Get base URL for a provider.
      */
+    @Cacheable(value = "providers", key = "'baseUrl:' + #providerKey", unless = "#result == null")
     public String getBaseUrl(String providerKey) {
         return repository.findByProviderKey(providerKey)
             .map(SysProviderConfig::getBaseUrl)
@@ -53,6 +57,7 @@ public class ProviderConfigService {
     /**
      * Get default model for a provider.
      */
+    @Cacheable(value = "providers", key = "'defaultModel:' + #providerKey", unless = "#result == null")
     public String getDefaultModel(String providerKey) {
         return repository.findByProviderKey(providerKey)
             .map(SysProviderConfig::getDefaultModel)
@@ -63,6 +68,7 @@ public class ProviderConfigService {
     /**
      * Get the primary enabled provider key (first enabled with API key).
      */
+    @Cacheable(value = "providers", key = "'primaryKey'", unless = "#result == null")
     public String getPrimaryProviderKey() {
         return repository.findAll().stream()
             .filter(c -> c.isEnabled() && c.getApiKey() != null && !c.getApiKey().isEmpty())
@@ -74,6 +80,7 @@ public class ProviderConfigService {
     /**
      * Get all providers (API key masked for frontend display).
      */
+    @Cacheable(value = "providers", key = "'allProviders'")
     public List<Map<String, Object>> getAllProviders() {
         return repository.findAll().stream()
             .map(this::toProviderMap)
@@ -84,6 +91,7 @@ public class ProviderConfigService {
      * Update or create a provider configuration.
      */
     @Transactional
+    @CacheEvict(value = "providers", allEntries = true)
     public void updateProvider(String key, String apiKey, String baseUrl, String defaultModel, boolean enabled) {
         SysProviderConfig config = repository.findByProviderKey(key).orElse(null);
         if (config == null) {

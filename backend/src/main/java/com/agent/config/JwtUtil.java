@@ -39,6 +39,18 @@ public class JwtUtil {
         return parseClaims(token).get("role", String.class);
     }
 
+    /**
+     * Extract username from token without requiring it to be unexpired.
+     * Used for cleanup operations (e.g., logout) where the token may have already expired.
+     */
+    public String getUsernameFromTokenIgnoringExpiration(String token) {
+        try {
+            return parseClaims(token).getSubject();
+        } catch (ExpiredJwtException e) {
+            return e.getClaims().getSubject();
+        }
+    }
+
     public boolean validateToken(String token) {
         try {
             parseClaims(token);

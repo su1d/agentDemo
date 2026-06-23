@@ -77,9 +77,9 @@ public class AgentWorkerService {
             String baseUrl = providerConfigService != null ? providerConfigService.getBaseUrl(providerKey) : "https://api.openai.com/v1";
             String model = providerConfigService != null ? providerConfigService.getDefaultModel(providerKey) : "gpt-4o-mini";
             log.info("Starting agent worker [{}] with provider '{}', model: {}", role, providerKey, model);
-            pb.environment().put("OPENAI_API_KEY", apiKey);
-            pb.environment().put("OPENAI_BASE_URL", baseUrl);
-            pb.environment().put("OPENAI_MODEL", model);
+            if (apiKey != null) pb.environment().put("OPENAI_API_KEY", apiKey);
+            if (baseUrl != null) pb.environment().put("OPENAI_BASE_URL", baseUrl);
+            if (model != null) pb.environment().put("OPENAI_MODEL", model);
             pb.redirectErrorStream(false);
 
             process = pb.start();

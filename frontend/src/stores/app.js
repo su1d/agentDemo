@@ -1,5 +1,6 @@
-import { defineStore } from 'pinia'
+﻿import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { apiLogout } from '../auth'
 
 const API_BASE = 'http://localhost:8080/api'
 
@@ -16,7 +17,10 @@ export const useAppStore = defineStore('app', () => {
     localStorage.setItem('username', u)
   }
 
-  function logout() {
+  async function logout() {
+    try {
+      await apiLogout()
+    } catch (e) { /* ignore network errors, still clear local state */ }
     token.value = ''
     username.value = ''
     localStorage.removeItem('token')

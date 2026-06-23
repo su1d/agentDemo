@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:8080/api'
+﻿const BASE_URL = 'http://localhost:8080/api'
 
 async function request(url, options = {}) {
   const token = localStorage.getItem('token')
@@ -26,6 +26,12 @@ export async function register(username, password) {
   return request('/auth/register', {
     method: 'POST',
     body: JSON.stringify({ username, password }),
+  })
+}
+
+export async function apiLogout() {
+  return request('/auth/logout', {
+    method: 'POST',
   })
 }
 

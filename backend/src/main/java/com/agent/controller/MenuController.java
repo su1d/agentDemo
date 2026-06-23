@@ -2,6 +2,8 @@ package com.agent.controller;
 
 import com.agent.entity.SysMenu;
 import com.agent.repository.SysMenuRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,6 +24,7 @@ public class MenuController {
      * 获取当前用户可见的菜单树
      */
     @GetMapping
+    @Cacheable(value = "menus", key = "'menuTree'")
     public ResponseEntity<List<Map<String, Object>>> getMenus() {
         List<SysMenu> topMenus = menuRepository.findByStatusAndParentIdIsNullOrderBySortOrderAsc("active");
         return ResponseEntity.ok(buildMenuTree(topMenus));
@@ -31,6 +34,7 @@ public class MenuController {
      * 获取所有菜单（管理用）
      */
     @GetMapping("/all")
+    @Cacheable(value = "menus", key = "'allMenus'")
     public ResponseEntity<List<SysMenu>> getAllMenus() {
         return ResponseEntity.ok(menuRepository.findByStatusOrderBySortOrderAsc("active"));
     }
@@ -39,6 +43,7 @@ public class MenuController {
      * 新增菜单
      */
     @PostMapping
+    @CacheEvict(value = "menus", allEntries = true)
     public ResponseEntity<SysMenu> createMenu(@RequestBody SysMenu menu) {
         if (menu.getSortOrder() == null) menu.setSortOrder(0);
         return ResponseEntity.ok(menuRepository.save(menu));
@@ -48,6 +53,7 @@ public class MenuController {
      * 更新菜单
      */
     @PutMapping("/{id}")
+    @CacheEvict(value = "menus", allEntries = true)
     public ResponseEntity<SysMenu> updateMenu(@PathVariable Long id, @RequestBody SysMenu menu) {
         return menuRepository.findById(id)
             .map(existing -> {
@@ -66,6 +72,7 @@ public class MenuController {
      * 删除菜单
      */
     @DeleteMapping("/{id}")
+    @CacheEvict(value = "menus", allEntries = true)
     public ResponseEntity<Void> deleteMenu(@PathVariable Long id) {
         menuRepository.deleteById(id);
         return ResponseEntity.ok().build();

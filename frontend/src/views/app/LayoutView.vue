@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="app-shell">
     <!-- Top Navigation Bar -->
     <header class="topbar">
@@ -60,7 +60,10 @@ function isActive(path) {
   if (path === '/workflow') return route.path.startsWith('/workflow')
   return route.path === path
 }
-function handleLogout() { store.logout(); router.push('/login') }
+async function handleLogout() {
+  await store.logout()
+  router.push('/login')
+}
 </script>
 
 <style scoped>
