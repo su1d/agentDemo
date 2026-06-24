@@ -6,7 +6,7 @@
         <div class="agent-list">
           <div v-for="a in agents" :key="a.role" class="agent-item glass">
             <span class="agent-avatar-sm" :style="{ background: agentColors[a.role] || '#6c5ce7' }">
-              {{ a.role.charAt(0).toUpperCase() }}
+              {{ animalEmoji(a.role) }}
             </span>
             <div class="agent-sm-meta">
               <span class="agent-sm-name">{{ a.role }}</span>
@@ -57,7 +57,7 @@
         <div v-for="(msg, i) in messages" :key="i" class="msg-row" :class="msg.role">
           <div class="bubble" :class="msg.role === 'assistant' ? 'glass-strong' : ''">
             <div class="sender" v-if="msg.role === 'assistant'">
-              <span class="sender-avatar" :style="{ background: agentColors[msg.agentRole] || '#6c5ce7' }">{{ msg.agentRole ? msg.agentRole.charAt(0).toUpperCase() : 'S' }}</span>
+              <span class="sender-avatar" :style="{ background: agentColors[msg.agentRole] || '#6c5ce7' }">{{ msg.agentRole ? animalEmoji(msg.agentRole) : '??' }}</span>
               <span class="sender-name">{{ msg.agentRole || 'System' }}</span>
               <span v-if="msg.collaborationMode" class="mode-tag">{{ msg.collaborationMode }}</span>
             </div>
@@ -119,6 +119,11 @@ const agentColors = {
   weather: '#4ade80',
   searcher: '#fb923c',
   summarizer: '#f472b6'
+}
+
+const animalEmoji = (role) => {
+  const map = { orchestrator: '🦉', calculator: '🦊', weather: '🐬', searcher: '🐶', summarizer: '🐱' }
+  return map[role] || '🤖'
 }
 
 const modes = [

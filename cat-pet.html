@@ -1,0 +1,961 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>your code companion</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0f0f1a;
+  font-family: 'Nunito', sans-serif;
+  overflow: hidden;
+}
+
+/* Starfield */
+.stars {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+.star {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: #fff;
+  border-radius: 50%;
+  animation: twinkle var(--d) ease-in-out infinite alternate;
+}
+@keyframes twinkle {
+  0% { opacity: 0.2; }
+  100% { opacity: 0.8; }
+}
+
+/* Ambient glow */
+.ambient {
+  position: fixed;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(108,92,231,0.08) 0%, transparent 70%);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -45%);
+  pointer-events: none;
+}
+
+/* Main scene */
+.scene {
+  position: relative;
+  width: 520px;
+  height: 520px;
+}
+
+/* Ground */
+.ground {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 380px;
+  height: 40px;
+  background: radial-gradient(ellipse at center, rgba(108,92,231,0.12) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+/* === CAT === */
+.cat {
+  position: absolute;
+  bottom: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 280px;
+  height: 320px;
+  cursor: pointer;
+  animation: float 4s ease-in-out infinite;
+}
+@keyframes float {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(-8px); }
+}
+
+/* Tail */
+.tail {
+  position: absolute;
+  bottom: 50px;
+  left: -60px;
+  width: 100px;
+  height: 20px;
+  transform-origin: right center;
+  animation: tailWag 3s ease-in-out infinite;
+}
+@keyframes tailWag {
+  0%, 100% { transform: rotate(-5deg); }
+  50% { transform: rotate(15deg); }
+}
+.tail-shape {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 90px;
+  height: 16px;
+  background: linear-gradient(135deg, #e8d0b8 0%, #d8bfa0 100%);
+  border-radius: 0 50% 50% 0 / 0 100% 100% 0;
+}
+.tail-stripe {
+  position: absolute;
+  height: 16px;
+  width: 4px;
+  background: #c4a070;
+  opacity: 0.4;
+  border-radius: 2px;
+}
+.tail-stripe:nth-child(2) { right: 50px; }
+.tail-stripe:nth-child(3) { right: 30px; }
+.tail-stripe:nth-child(4) { right: 10px; }
+
+/* Body */
+.body {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 180px;
+  height: 110px;
+  background: linear-gradient(170deg, #f0dcc8 0%, #e0c8b0 60%, #d4bfa0 100%);
+  border-radius: 50% 50% 45% 45%;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+  overflow: hidden;
+}
+.body-patch {
+  position: absolute;
+  width: 50px;
+  height: 35px;
+  background: radial-gradient(ellipse, #f0a050 0%, #d4883c 100%);
+  border-radius: 50%;
+  opacity: 0.45;
+}
+.body-patch:nth-child(1) { top: 20px; left: 10px; transform: rotate(-15deg); }
+.body-patch:nth-child(2) { top: 25px; right: 5px; transform: rotate(10deg); width: 40px; height: 28px; }
+.belly {
+  position: absolute;
+  bottom: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 110px;
+  height: 70px;
+  background: radial-gradient(ellipse at center, #fff8f0 0%, #f5ece0 100%);
+  border-radius: 50%;
+  opacity: 0.6;
+}
+
+/* Paws */
+.paw {
+  position: absolute;
+  bottom: 0;
+  width: 40px;
+  height: 25px;
+  background: linear-gradient(180deg, #e8d0b8 0%, #d8bfa0 100%);
+  border-radius: 40% 40% 50% 50%;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+.paw-left { left: 40px; }
+.paw-right { right: 40px; }
+.paw-pad {
+  position: absolute;
+  bottom: 4px;
+  border-radius: 50%;
+  background: #f09aaa;
+  opacity: 0.5;
+}
+.paw-left .paw-pad:nth-child(1) { left: 6px; width: 9px; height: 7px; }
+.paw-left .paw-pad:nth-child(2) { left: 16px; width: 8px; height: 7px; }
+.paw-left .paw-pad:nth-child(3) { left: 25px; width: 9px; height: 7px; }
+.paw-right .paw-pad:nth-child(1) { left: 6px; width: 9px; height: 7px; }
+.paw-right .paw-pad:nth-child(2) { left: 16px; width: 8px; height: 7px; }
+.paw-right .paw-pad:nth-child(3) { left: 25px; width: 9px; height: 7px; }
+
+/* Head */
+.head {
+  position: absolute;
+  bottom: 85px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 168px;
+  height: 145px;
+  background: linear-gradient(170deg, #faf0e6 0%, #f0dcc8 50%, #e0c8b0 100%);
+  border-radius: 50% 50% 45% 45%;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+  z-index: 2;
+}
+
+/* Ears */
+.ear {
+  position: absolute;
+  width: 40px;
+  height: 55px;
+  z-index: 1;
+}
+.ear-left {
+  bottom: 110px;
+  left: 12px;
+  transform: rotate(-15deg);
+}
+.ear-right {
+  bottom: 110px;
+  right: 12px;
+  transform: rotate(15deg);
+}
+.ear-outer {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #f0dcc8 0%, #d8bfa0 100%);
+  clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+  border-radius: 0 0 30% 30%;
+}
+.ear-inner {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 22px;
+  height: 32px;
+  background: linear-gradient(180deg, #ffb0c0 0%, #f09aaa 100%);
+  clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+  border-radius: 0 0 30% 30%;
+}
+.ear-tuft {
+  position: absolute;
+  top: -3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 10px;
+  background: #e0c8b0;
+  border-radius: 50%;
+  opacity: 0.6;
+}
+
+/* Cheek fluff */
+.fluff {
+  position: absolute;
+  bottom: 20px;
+  width: 40px;
+  height: 35px;
+  background: #f0dcc8;
+  border-radius: 50%;
+  opacity: 0.6;
+  z-index: 0;
+}
+.fluff-left { left: -10px; }
+.fluff-right { right: -10px; }
+
+/* Eyes */
+.eyes {
+  position: absolute;
+  top: 50px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 34px;
+  z-index: 3;
+}
+.eye {
+  position: relative;
+  width: 36px;
+  height: 38px;
+  background: radial-gradient(ellipse at 35% 30%, #fff 0%, #d8dce8 100%);
+  border-radius: 50%;
+  box-shadow: inset 0 2px 6px rgba(0,0,0,0.05);
+  overflow: hidden;
+}
+.iris {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 28px;
+  height: 30px;
+  background: radial-gradient(ellipse at 40% 35%, #5b8c5a 0%, #3d6b3c 60%, #2a4a29 100%);
+  border-radius: 50%;
+  animation: lookAround 6s ease-in-out infinite;
+}
+@keyframes lookAround {
+  0%, 5% { transform: translate(0, 0); }
+  10%, 15% { transform: translate(3px, -1px); }
+  20%, 25% { transform: translate(-2px, 1px); }
+  30%, 35% { transform: translate(4px, 2px); }
+  40%, 45% { transform: translate(-3px, -1px); }
+  50%, 55% { transform: translate(0, 0); }
+  60%, 65% { transform: translate(-4px, 2px); }
+  70%, 75% { transform: translate(2px, 1px); }
+  80%, 100% { transform: translate(0, 0); }
+}
+.pupil {
+  position: absolute;
+  top: 3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 22px;
+  background: #0a0a12;
+  border-radius: 50%;
+}
+.highlight {
+  position: absolute;
+  border-radius: 50%;
+  background: #fff;
+  opacity: 0.9;
+}
+.highlight-main {
+  top: 6px;
+  right: 5px;
+  width: 10px;
+  height: 10px;
+}
+.highlight-secondary {
+  bottom: 6px;
+  left: 5px;
+  width: 5px;
+  height: 5px;
+  opacity: 0.4;
+}
+.eyelid {
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  height: 12px;
+  background: #f0dcc8;
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.cat.closed .eyelid {
+  opacity: 1;
+  height: 22px;
+}
+
+/* Blush */
+.blush {
+  position: absolute;
+  top: 68px;
+  width: 28px;
+  height: 16px;
+  background: #ff9eb5;
+  border-radius: 50%;
+  opacity: 0.18;
+  z-index: 2;
+}
+.blush-left { left: 22px; }
+.blush-right { right: 22px; }
+
+/* Snout */
+.snout {
+  position: absolute;
+  bottom: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 48px;
+  height: 32px;
+  background: #fff8f0;
+  border-radius: 50%;
+  opacity: 0.7;
+  z-index: 3;
+}
+.nose {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 12px;
+  height: 10px;
+  background: linear-gradient(180deg, #ffb5c5 0%, #f09aaa 100%);
+  clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+}
+.mouth {
+  position: absolute;
+  bottom: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.mouth-line {
+  width: 2px;
+  height: 6px;
+  background: #d48595;
+  margin: 0 auto;
+}
+.mouth-curve {
+  display: flex;
+  gap: 6px;
+  margin-top: -1px;
+}
+.mouth-curve::before,
+.mouth-curve::after {
+  content: '';
+  width: 10px;
+  height: 7px;
+  border: 2px solid #d48595;
+  border-top: 0;
+  border-radius: 0 0 50% 50%;
+}
+.mouth-curve::after { transform: scaleX(-1); }
+
+/* Whiskers */
+.whiskers {
+  position: absolute;
+  top: 72px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  z-index: 2;
+  pointer-events: none;
+}
+.whisker {
+  position: absolute;
+  height: 1.5px;
+  background: #c0b0a0;
+  opacity: 0.45;
+  border-radius: 1px;
+}
+.whisker-l1 { left: 2px; top: 0; width: 60px; transform: rotate(8deg); transform-origin: right center; }
+.whisker-l2 { left: 4px; top: 10px; width: 62px; transform: rotate(2deg); transform-origin: right center; }
+.whisker-l3 { left: 2px; top: 20px; width: 58px; transform: rotate(-5deg); transform-origin: right center; }
+.whisker-r1 { right: 2px; top: 0; width: 60px; transform: rotate(-8deg); transform-origin: left center; }
+.whisker-r2 { right: 4px; top: 10px; width: 62px; transform: rotate(-2deg); transform-origin: left center; }
+.whisker-r3 { right: 2px; top: 20px; width: 58px; transform: rotate(5deg); transform-origin: left center; }
+
+/* Forehead pattern (tabby M) */
+.forehead {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+}
+.forehead-patch {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 56px;
+  height: 32px;
+  background: radial-gradient(ellipse, #f0a050 0%, transparent 70%);
+  opacity: 0.3;
+  border-radius: 50%;
+}
+.forehead-m {
+  position: relative;
+  display: flex;
+  gap: 0;
+  margin-top: -2px;
+}
+.forehead-m span {
+  display: block;
+  width: 16px;
+  height: 18px;
+  border: 2.5px solid #c4a070;
+  border-bottom: 0;
+  border-radius: 50% 50% 0 0;
+  opacity: 0.35;
+}
+.forehead-m span:nth-child(1) { transform: rotate(-15deg); margin-right: -4px; }
+.forehead-m span:nth-child(2) { transform: rotate(0deg); margin-top: -3px; }
+.forehead-m span:nth-child(3) { transform: rotate(15deg); margin-left: -4px; }
+
+/* Glasses */
+.glasses {
+  position: absolute;
+  top: 48px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 20px;
+  z-index: 4;
+  pointer-events: none;
+  opacity: 0.65;
+  transition: opacity 0.5s;
+}
+.glass-lens {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  border: 2.5px solid #8888aa;
+  border-radius: 0 0 50% 50%;
+}
+.glass-lens::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: 6px;
+  width: 20px;
+  height: 14px;
+  background: linear-gradient(135deg, rgba(200,220,240,0.3) 0%, transparent 100%);
+  border-radius: 50%;
+  transform: rotate(-20deg);
+}
+.glass-bridge {
+  position: absolute;
+  top: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 18px;
+  height: 3px;
+  background: #8888aa;
+  border-radius: 3px;
+}
+
+/* Book (companion book) */
+.book-container {
+  position: absolute;
+  bottom: 35px;
+  right: -30px;
+  width: 60px;
+  height: 50px;
+  z-index: 5;
+  animation: bookBounce 5s ease-in-out infinite;
+}
+@keyframes bookBounce {
+  0%, 100% { transform: translateY(0) rotate(-15deg); }
+  50% { transform: translateY(-5px) rotate(-12deg); }
+}
+.book-cover {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 60px;
+  height: 42px;
+  background: linear-gradient(135deg, #d42040 0%, #b01830 100%);
+  border-radius: 0 4px 4px 0;
+  box-shadow: 2px 3px 8px rgba(0,0,0,0.3);
+}
+.book-cover::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 1.5px solid #a01030;
+  border-radius: inherit;
+}
+.book-pages {
+  position: absolute;
+  bottom: 1px;
+  left: 3px;
+  width: 54px;
+  height: 36px;
+  background: linear-gradient(180deg, #fff8e8 0%, #f5ecd8 100%);
+  border-radius: 0 2px 2px 0;
+}
+.book-line {
+  position: absolute;
+  left: 8px;
+  height: 1.5px;
+  background: #d0c8b8;
+  border-radius: 1px;
+}
+.book-line:nth-child(1) { top: 10px; width: 30px; }
+.book-line:nth-child(2) { top: 18px; width: 26px; }
+.book-line:nth-child(3) { top: 26px; width: 22px; }
+.book-spine {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 5px;
+  height: 42px;
+  background: linear-gradient(180deg, #a01030 0%, #801028 100%);
+  border-radius: 2px 0 0 2px;
+}
+.book-ribbon {
+  position: absolute;
+  bottom: -6px;
+  right: 10px;
+  width: 4px;
+  height: 14px;
+  background: #ff6b9d;
+  border-radius: 0 0 2px 2px;
+}
+
+/* Heart */
+.heart {
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 18px;
+  height: 16px;
+  z-index: 0;
+}
+.heart svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 0 4px rgba(255,107,157,0.5));
+}
+.heart-path {
+  fill: #ff6b9d;
+  opacity: 0.5;
+  animation: heartPulse 2s ease-in-out infinite;
+}
+@keyframes heartPulse {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.15); }
+}
+
+/* Code particles */
+.code-particle {
+  position: absolute;
+  font-family: 'Courier New', monospace;
+  font-size: 9px;
+  color: #6c5ce7;
+  opacity: 0.15;
+  pointer-events: none;
+  z-index: 0;
+}
+.code-particle:nth-child(1) { bottom: 80px; left: -90px; animation: floatParticle1 4s ease-in-out infinite; }
+.code-particle:nth-child(2) { bottom: 60px; right: -100px; animation: floatParticle2 5s ease-in-out infinite; }
+.code-particle:nth-child(3) { top: 10px; left: -70px; animation: floatParticle1 6s ease-in-out infinite; }
+.code-particle:nth-child(4) { top: 0; right: -80px; animation: floatParticle2 7s ease-in-out infinite; }
+.code-particle:nth-child(5) { bottom: 140px; left: -60px; animation: floatParticle1 5.5s ease-in-out infinite; }
+.code-particle:nth-child(6) { bottom: 120px; right: -70px; animation: floatParticle2 6.5s ease-in-out infinite; }
+@keyframes floatParticle1 {
+  0%, 100% { transform: translateY(0); opacity: 0.15; }
+  50% { transform: translateY(-20px); opacity: 0.25; }
+}
+@keyframes floatParticle2 {
+  0%, 100% { transform: translateY(0); opacity: 0.15; }
+  50% { transform: translateY(-15px); opacity: 0.2; }
+}
+
+/* Music notes (appear on click) */
+.music-note {
+  position: absolute;
+  font-size: 18px;
+  color: #a78bfa;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 10;
+  animation: noteFloat 1.2s ease-out forwards;
+}
+@keyframes noteFloat {
+  0% { opacity: 0.8; transform: translateY(0) scale(0.5); }
+  50% { opacity: 0.6; transform: translateY(-50px) scale(1); }
+  100% { opacity: 0; transform: translateY(-100px) scale(0.8); }
+}
+
+/* Sparkles */
+.sparkle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: #ffd700;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 5;
+  animation: sparkleAnim 1.5s ease-in-out infinite;
+}
+@keyframes sparkleAnim {
+  0%, 100% { opacity: 0; transform: scale(0); }
+  50% { opacity: 0.6; transform: scale(1); }
+}
+
+/* Message bubble */
+.message {
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(108,92,231,0.15);
+  color: #a78bfa;
+  padding: 6px 14px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  opacity: 0;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  pointer-events: none;
+  border: 1px solid rgba(108,92,231,0.2);
+  backdrop-filter: blur(10px);
+}
+.message.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-8px);
+}
+
+/* Tooltip text */
+.subtitle {
+  position: absolute;
+  bottom: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  color: #666;
+  white-space: nowrap;
+  letter-spacing: 2px;
+  opacity: 0.4;
+  z-index: 0;
+}
+
+/* Responsive */
+@media (max-width: 540px) {
+  .scene { transform: scale(0.75); }
+}
+</style>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+<div class="ambient"></div>
+
+<div class="scene">
+  <div class="ground"></div>
+
+  <div class="cat" id="cat">
+    <!-- Tail -->
+    <div class="tail">
+      <div class="tail-shape"></div>
+      <div class="tail-stripe" style="right:60px"></div>
+      <div class="tail-stripe" style="right:40px"></div>
+      <div class="tail-stripe" style="right:20px"></div>
+    </div>
+
+    <!-- Ears -->
+    <div class="ear ear-left">
+      <div class="ear-outer"></div>
+      <div class="ear-inner"></div>
+      <div class="ear-tuft"></div>
+    </div>
+    <div class="ear ear-right">
+      <div class="ear-outer"></div>
+      <div class="ear-inner"></div>
+      <div class="ear-tuft"></div>
+    </div>
+
+    <!-- Cheek fluff -->
+    <div class="fluff fluff-left"></div>
+    <div class="fluff fluff-right"></div>
+
+    <!-- Head -->
+    <div class="head">
+      <!-- Forehead -->
+      <div class="forehead">
+        <div class="forehead-patch"></div>
+        <div class="forehead-m">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </div>
+
+      <!-- Eyes -->
+      <div class="eyes">
+        <div class="eye">
+          <div class="iris">
+            <div class="pupil"></div>
+          </div>
+          <div class="highlight highlight-main"></div>
+          <div class="highlight highlight-secondary"></div>
+          <div class="eyelid"></div>
+        </div>
+        <div class="eye">
+          <div class="iris">
+            <div class="pupil"></div>
+          </div>
+          <div class="highlight highlight-main"></div>
+          <div class="highlight highlight-secondary"></div>
+          <div class="eyelid"></div>
+        </div>
+      </div>
+
+      <!-- Blush -->
+      <div class="blush blush-left"></div>
+      <div class="blush blush-right"></div>
+
+      <!-- Snout -->
+      <div class="snout">
+        <div class="nose"></div>
+        <div class="mouth">
+          <div class="mouth-line"></div>
+          <div class="mouth-curve"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Whiskers -->
+    <div class="whiskers">
+      <div class="whisker whisker-l1"></div>
+      <div class="whisker whisker-l2"></div>
+      <div class="whisker whisker-l3"></div>
+      <div class="whisker whisker-r1"></div>
+      <div class="whisker whisker-r2"></div>
+      <div class="whisker whisker-r3"></div>
+    </div>
+
+    <!-- Glasses -->
+    <div class="glasses" id="glasses">
+      <div class="glass-lens"></div>
+      <div class="glass-bridge"></div>
+      <div class="glass-lens"></div>
+    </div>
+
+    <!-- Body -->
+    <div class="body">
+      <div class="body-patch"></div>
+      <div class="body-patch"></div>
+      <div class="belly"></div>
+    </div>
+
+    <!-- Paws -->
+    <div class="paw paw-left">
+      <div class="paw-pad"></div>
+      <div class="paw-pad"></div>
+      <div class="paw-pad"></div>
+    </div>
+    <div class="paw paw-right">
+      <div class="paw-pad"></div>
+      <div class="paw-pad"></div>
+      <div class="paw-pad"></div>
+    </div>
+
+    <!-- Book -->
+    <div class="book-container">
+      <div class="book-cover">
+        <div class="book-spine"></div>
+        <div class="book-pages">
+          <div class="book-line"></div>
+          <div class="book-line"></div>
+          <div class="book-line"></div>
+        </div>
+      </div>
+      <div class="book-ribbon"></div>
+    </div>
+
+    <!-- Heart -->
+    <div class="heart">
+      <svg viewBox="0 0 24 24">
+        <path class="heart-path" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+      </svg>
+    </div>
+
+    <!-- Message bubble -->
+    <div class="message" id="message">meow?</div>
+  </div>
+
+  <!-- Code particles -->
+  <div class="code-particle" style="bottom:80px;left:-90px">&lt;/&gt;</div>
+  <div class="code-particle" style="bottom:60px;right:-100px">{ }</div>
+  <div class="code-particle" style="top:10px;left:-70px">#</div>
+  <div class="code-particle" style="top:0;right:-80px">~$</div>
+  <div class="code-particle" style="bottom:140px;left:-60px">def</div>
+  <div class="code-particle" style="bottom:120px;right:-70px">import</div>
+
+  <!-- Sparkles -->
+  <div class="sparkle" style="top:40px;left:30px;animation-delay:0s"></div>
+  <div class="sparkle" style="top:20px;right:50px;animation-delay:0.8s"></div>
+  <div class="sparkle" style="top:60px;left:50%;animation-delay:1.6s"></div>
+</div>
+
+<div class="subtitle">your purr-fect code companion</div>
+
+<script>
+// Starfield
+const starsEl = document.getElementById('stars');
+for (let i = 0; i < 80; i++) {
+  const star = document.createElement('div');
+  star.className = 'star';
+  star.style.left = Math.random() * 100 + '%';
+  star.style.top = Math.random() * 100 + '%';
+  star.style.setProperty('--d', (2 + Math.random() * 3) + 's');
+  star.style.width = star.style.height = (1 + Math.random() * 1.5) + 'px';
+  starsEl.appendChild(star);
+}
+
+// Cat interactions
+const cat = document.getElementById('cat');
+const message = document.getElementById('message');
+const glasses = document.getElementById('glasses');
+
+const messages = [
+  'meow?', 'purr...', 'need help?', 'debugging...', 'meow!',
+  'rub rub', 'you got this!', 'let me see...', 'code meow',
+  'good job!', 'try it again?', 'so proud of you!'
+];
+
+// Blink
+setInterval(() => {
+  cat.classList.add('closed');
+  setTimeout(() => cat.classList.remove('closed'), 150);
+}, 3000);
+
+// Double blink sometimes
+setInterval(() => {
+  setTimeout(() => {
+    cat.classList.add('closed');
+    setTimeout(() => {
+      cat.classList.remove('closed');
+      setTimeout(() => {
+        cat.classList.add('closed');
+        setTimeout(() => cat.classList.remove('closed'), 120);
+      }, 100);
+    }, 120);
+  }, 0);
+}, 12000);
+
+// Click interaction
+cat.addEventListener('click', (e) => {
+  // Show message
+  const msg = messages[Math.floor(Math.random() * messages.length)];
+  message.textContent = msg;
+  message.classList.add('show');
+  setTimeout(() => message.classList.remove('show'), 2000);
+
+  // Music notes
+  const notes = ['♪', '♫', '♬', '♩'];
+  for (let i = 0; i < 3; i++) {
+    const note = document.createElement('div');
+    note.className = 'music-note';
+    note.textContent = notes[Math.floor(Math.random() * notes.length)];
+    note.style.left = (e.clientX - cat.getBoundingClientRect().left + (Math.random() - 0.5) * 60) + 'px';
+    note.style.top = (e.clientY - cat.getBoundingClientRect().top + 30) + 'px';
+    note.style.animationDelay = (i * 0.1) + 's';
+    cat.appendChild(note);
+    setTimeout(() => note.remove(), 1500);
+  }
+
+  // Blink happy
+  cat.classList.add('closed');
+  setTimeout(() => {
+    cat.classList.remove('closed');
+    setTimeout(() => {
+      cat.classList.add('closed');
+      setTimeout(() => cat.classList.remove('closed'), 100);
+    }, 80);
+  }, 100);
+
+  // Remove glasses briefly (surprised!)
+  glasses.style.opacity = 0;
+  setTimeout(() => glasses.style.opacity = 0.65, 400);
+});
+
+// Hover
+cat.addEventListener('mouseenter', () => {
+  message.textContent = 'purr?';
+  message.classList.add('show');
+});
+cat.addEventListener('mouseleave', () => {
+  message.classList.remove('show');
+});
+</script>
+</body>
+</html>

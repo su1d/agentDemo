@@ -1,0 +1,304 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="500" height="500">
+  <defs>
+    <!-- Background gradient - warm night -->
+    <radialGradient id="bgGrad" cx="50%" cy="100%" r="80%">
+      <stop offset="0%" stop-color="#2a1a3a"/>
+      <stop offset="60%" stop-color="#1a1a2e"/>
+      <stop offset="100%" stop-color="#0f0f18"/>
+    </radialGradient>
+    
+    <!-- Fur gradients -->
+    <radialGradient id="headGrad" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#faf0e6"/>
+      <stop offset="60%" stop-color="#f0dcc8"/>
+      <stop offset="100%" stop-color="#e0c8b0"/>
+    </radialGradient>
+    <radialGradient id="bodyGrad" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#f5e0cc"/>
+      <stop offset="70%" stop-color="#e8d0b8"/>
+      <stop offset="100%" stop-color="#d8bfa0"/>
+    </radialGradient>
+    
+    <!-- Orange patches -->
+    <radialGradient id="patchGrad" cx="40%" cy="30%" r="60%">
+      <stop offset="0%" stop-color="#f0a050"/>
+      <stop offset="100%" stop-color="#d4883c"/>
+    </radialGradient>
+    
+    <!-- Eye gradients -->
+    <radialGradient id="eyeWhite" cx="35%" cy="30%" r="65%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#d8dce8"/>
+    </radialGradient>
+    <radialGradient id="irisGrad" cx="40%" cy="35%" r="60%">
+      <stop offset="0%" stop-color="#5b8c5a"/>
+      <stop offset="60%" stop-color="#3d6b3c"/>
+      <stop offset="100%" stop-color="#2a4a29"/>
+    </radialGradient>
+    
+    <!-- Nose/paw pads -->
+    <radialGradient id="pinkGrad" cx="40%" cy="30%" r="60%">
+      <stop offset="0%" stop-color="#ffb5c5"/>
+      <stop offset="100%" stop-color="#f09aaa"/>
+    </radialGradient>
+    
+    <!-- Inner ear -->
+    <radialGradient id="innerEar" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffb0c0"/>
+      <stop offset="100%" stop-color="#f09aaa"/>
+    </radialGradient>
+
+    <!-- Glow filter -->
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="softGlow">
+      <feGaussianBlur stdDeviation="6"/>
+    </filter>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#000" flood-opacity="0.35"/>
+    </filter>
+    <filter id="starGlow">
+      <feGaussianBlur stdDeviation="2"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="500" height="500" fill="url(#bgGrad)"/>
+
+  <!-- Glowing aura behind cat -->
+  <ellipse cx="250" cy="280" rx="170" ry="160" fill="#6c5ce7" opacity="0.06" filter="url(#softGlow)"/>
+
+  <!-- Stars -->
+  <g filter="url(#starGlow)" opacity="0.7">
+    <circle cx="55" cy="50" r="1.8" fill="#fff"><animate attributeName="opacity" values="0.3;1;0.3" dur="3s" repeatCount="indefinite"/></circle>
+    <circle cx="140" cy="30" r="1.2" fill="#fff"><animate attributeName="opacity" values="0.5;1;0.5" dur="2.5s" repeatCount="indefinite"/></circle>
+    <circle cx="350" cy="40" r="1.8" fill="#fff"/>
+    <circle cx="430" cy="70" r="1.2" fill="#fff"><animate attributeName="opacity" values="0.4;1;0.4" dur="4s" repeatCount="indefinite"/></circle>
+    <circle cx="85" cy="130" r="1" fill="#fff"/>
+    <circle cx="420" cy="140" r="1.4" fill="#fff"><animate attributeName="opacity" values="0.6;1;0.6" dur="3.5s" repeatCount="indefinite"/></circle>
+    <circle cx="250" cy="25" r="1.3" fill="#fff"/>
+    <circle cx="190" cy="55" r="1" fill="#fff"/>
+    <circle cx="380" cy="30" r="0.9" fill="#fff"/>
+    <circle cx="50" cy="190" r="0.9" fill="#fff"/>
+    <circle cx="455" cy="190" r="1.1" fill="#fff"/>
+    <circle cx="110" cy="80" r="1.5" fill="#fff"/>
+    <circle cx="310" cy="60" r="0.8" fill="#fff"/>
+  </g>
+
+  <!-- Crescent moon -->
+  <g transform="translate(400, 80)" opacity="0.2">
+    <circle cx="0" cy="0" r="22" fill="#f0dcc8"/>
+    <circle cx="-8" cy="-6" r="18" fill="#1a1a2e"/>
+  </g>
+
+  <!-- Ground / platform -->
+  <ellipse cx="250" cy="430" rx="190" ry="25" fill="#000" opacity="0.15"/>
+  <ellipse cx="250" cy="430" rx="140" ry="15" fill="#6c5ce7" opacity="0.08"/>
+
+  <!-- ===== TAIL ===== -->
+  <g filter="url(#shadow)">
+    <path d="M160 370 Q100 350 80 290 Q60 230 90 210 Q110 195 125 220 Q140 250 145 300 Q150 340 170 365" 
+          fill="url(#bodyGrad)" stroke="#d0b898" stroke-width="0.5"/>
+    <!-- Tail stripes -->
+    <path d="M95 240 Q110 232 105 248" stroke="#c4a070" stroke-width="3" fill="none" opacity="0.5" stroke-linecap="round"/>
+    <path d="M88 265 Q103 257 98 273" stroke="#c4a070" stroke-width="3" fill="none" opacity="0.5" stroke-linecap="round"/>
+    <path d="M85 290 Q100 282 95 298" stroke="#c4a070" stroke-width="3" fill="none" opacity="0.5" stroke-linecap="round"/>
+    <!-- Orange patch on tail -->
+    <path d="M100 225 Q115 215 120 235" fill="url(#patchGrad)" opacity="0.6"/>
+  </g>
+
+  <!-- ===== BODY ===== -->
+  <g filter="url(#shadow)">
+    <ellipse cx="250" cy="365" rx="95" ry="60" fill="url(#bodyGrad)"/>
+    
+    <!-- Belly patch -->
+    <ellipse cx="250" cy="378" rx="60" ry="42" fill="#fff8f0" opacity="0.5"/>
+    
+    <!-- Orange patches on body -->
+    <ellipse cx="195" cy="348" rx="25" ry="18" fill="url(#patchGrad)" opacity="0.4" transform="rotate(-15, 195, 348)"/>
+    <ellipse cx="310" cy="355" rx="20" ry="15" fill="url(#patchGrad)" opacity="0.35" transform="rotate(10, 310, 355)"/>
+    
+    <!-- Body stripes -->
+    <path d="M170 370 Q190 360 175 385" stroke="#c4a070" stroke-width="2.5" fill="none" opacity="0.3" stroke-linecap="round"/>
+    <path d="M325 365 Q345 355 330 380" stroke="#c4a070" stroke-width="2.5" fill="none" opacity="0.3" stroke-linecap="round"/>
+  </g>
+
+  <!-- ===== BACK LEGS (hiding behind body, shown partially) ===== -->
+  <ellipse cx="170" cy="405" rx="20" ry="12" fill="#d8bfa0" filter="url(#shadow)"/>
+  <ellipse cx="330" cy="405" rx="20" ry="12" fill="#d8bfa0" filter="url(#shadow)"/>
+
+  <!-- ===== FRONT PAWS ===== -->
+  <g filter="url(#shadow)">
+    <!-- Left paw -->
+    <ellipse cx="210" cy="418" rx="22" ry="14" fill="url(#bodyGrad)"/>
+    <circle cx="204" cy="423" r="5" fill="url(#pinkGrad)" opacity="0.5"/>
+    <circle cx="213" cy="425" r="4.5" fill="url(#pinkGrad)" opacity="0.5"/>
+    <circle cx="220" cy="423" r="5" fill="url(#pinkGrad)" opacity="0.5"/>
+    <ellipse cx="213" cy="416" rx="7" ry="4" fill="url(#pinkGrad)" opacity="0.4"/>
+    
+    <!-- Right paw -->
+    <ellipse cx="290" cy="418" rx="22" ry="14" fill="url(#bodyGrad)"/>
+    <circle cx="284" cy="423" r="5" fill="url(#pinkGrad)" opacity="0.5"/>
+    <circle cx="293" cy="425" r="4.5" fill="url(#pinkGrad)" opacity="0.5"/>
+    <circle cx="300" cy="423" r="5" fill="url(#pinkGrad)" opacity="0.5"/>
+    <ellipse cx="293" cy="416" rx="7" ry="4" fill="url(#pinkGrad)" opacity="0.4"/>
+  </g>
+
+  <!-- ===== HEAD ===== -->
+  <g filter="url(#shadow)">
+    <!-- Ears -->
+    <!-- Left ear -->
+    <path d="M175 220 L155 135 L200 185 Z" fill="url(#headGrad)" stroke="#d0b898" stroke-width="0.5"/>
+    <path d="M178 215 L163 150 L195 190 Z" fill="url(#innerEar)"/>
+    <!-- Left ear tuft -->
+    <path d="M160 145 Q158 135 165 140 Q162 130 170 138" stroke="#e0c8b0" stroke-width="1.5" fill="none" opacity="0.6"/>
+    
+    <!-- Right ear -->
+    <path d="M325 220 L345 135 L300 185 Z" fill="url(#headGrad)" stroke="#d0b898" stroke-width="0.5"/>
+    <path d="M322 215 L337 150 L305 190 Z" fill="url(#innerEar)"/>
+    <!-- Right ear tuft -->
+    <path d="M340 145 Q342 135 335 140 Q338 130 330 138" stroke="#e0c8b0" stroke-width="1.5" fill="none" opacity="0.6"/>
+
+    <!-- Main head shape -->
+    <ellipse cx="250" cy="235" rx="82" ry="72" fill="url(#headGrad)"/>
+
+    <!-- Forehead markings (tabby M) -->
+    <path d="M220 195 Q230 185 240 195 M240 195 Q250 185 260 195 M260 195 Q270 185 280 195" 
+          stroke="#c4a070" stroke-width="2.5" fill="none" opacity="0.4" stroke-linecap="round" stroke-linejoin="round"/>
+    
+    <!-- Forehead orange patch -->
+    <ellipse cx="250" cy="195" rx="30" ry="18" fill="url(#patchGrad)" opacity="0.3"/>
+
+    <!-- Cheek fluff -->
+    <ellipse cx="185" cy="248" rx="22" ry="16" fill="url(#headGrad)" opacity="0.8"/>
+    <ellipse cx="315" cy="248" rx="22" ry="16" fill="url(#headGrad)" opacity="0.8"/>
+
+    <!-- Cheek fluff detail lines -->
+    <path d="M175 245 Q168 243 172 248" stroke="#d0b898" stroke-width="1" fill="none" opacity="0.4"/>
+    <path d="M180 252 Q172 250 176 255" stroke="#d0b898" stroke-width="1" fill="none" opacity="0.4"/>
+    <path d="M325 245 Q332 243 328 248" stroke="#d0b898" stroke-width="1" fill="none" opacity="0.4"/>
+    <path d="M320 252 Q328 250 324 255" stroke="#d0b898" stroke-width="1" fill="none" opacity="0.4"/>
+  </g>
+
+  <!-- ===== EYES ===== -->
+  <g>
+    <!-- Left eye -->
+    <ellipse cx="218" cy="228" rx="22" ry="24" fill="url(#eyeWhite)"/>
+    <ellipse cx="218" cy="228" rx="22" ry="24" fill="none" stroke="#d0b898" stroke-width="0.8" opacity="0.3"/>
+    <!-- Iris -->
+    <ellipse cx="222" cy="230" rx="15" ry="17" fill="url(#irisGrad)"/>
+    <!-- Pupil -->
+    <ellipse cx="222" cy="230" rx="4" ry="13" fill="#0a0a12"/>
+    <!-- Highlights -->
+    <circle cx="230" cy="220" r="6" fill="#fff" opacity="0.9"/>
+    <circle cx="216" cy="236" r="3" fill="#fff" opacity="0.4"/>
+    <!-- Eyelashes -->
+    <path d="M200 212 Q205 207 202 213" stroke="#8a7a6a" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+    <path d="M210 208 Q215 203 212 209" stroke="#8a7a6a" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+
+    <!-- Right eye -->
+    <ellipse cx="282" cy="228" rx="22" ry="24" fill="url(#eyeWhite)"/>
+    <ellipse cx="282" cy="228" rx="22" ry="24" fill="none" stroke="#d0b898" stroke-width="0.8" opacity="0.3"/>
+    <!-- Iris -->
+    <ellipse cx="286" cy="230" rx="15" ry="17" fill="url(#irisGrad)"/>
+    <!-- Pupil -->
+    <ellipse cx="286" cy="230" rx="4" ry="13" fill="#0a0a12"/>
+    <!-- Highlights -->
+    <circle cx="294" cy="220" r="6" fill="#fff" opacity="0.9"/>
+    <circle cx="280" cy="236" r="3" fill="#fff" opacity="0.4"/>
+    <!-- Eyelashes -->
+    <path d="M300 212 Q295 207 298 213" stroke="#8a7a6a" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+    <path d="M290 208 Q285 203 288 209" stroke="#8a7a6a" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+  </g>
+
+  <!-- ===== BLUSH ===== -->
+  <ellipse cx="192" cy="250" rx="15" ry="9" fill="#ff9eb5" opacity="0.2"/>
+  <ellipse cx="308" cy="250" rx="15" ry="9" fill="#ff9eb5" opacity="0.2"/>
+
+  <!-- ===== SNOUT & NOSE ===== -->
+  <ellipse cx="250" cy="260" rx="25" ry="18" fill="#fff8f0" opacity="0.6"/>
+  
+  <!-- Nose -->
+  <path d="M245 256 Q250 253 255 256 L250 262 Z" fill="url(#pinkGrad)"/>
+  
+  <!-- Mouth -->
+  <path d="M243 264 Q247 270 250 266 Q253 270 257 264" stroke="#d48595" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+  
+  <!-- ===== WHISKERS ===== -->
+  <g stroke="#c0b0a0" stroke-width="0.8" fill="none" opacity="0.5" stroke-linecap="round">
+    <!-- Left whiskers -->
+    <line x1="175" y1="252" x2="210" y2="259"/>
+    <line x1="172" y1="262" x2="210" y2="264"/>
+    <line x1="175" y1="272" x2="210" y2="269"/>
+    <!-- Right whiskers -->
+    <line x1="325" y1="252" x2="290" y2="259"/>
+    <line x1="328" y1="262" x2="290" y2="264"/>
+    <line x1="325" y1="272" x2="290" y2="269"/>
+  </g>
+
+  <!-- ===== READING GLASSES (half-moon, a nod to the Summarizer cat role) ===== -->
+  <g opacity="0.7">
+    <!-- Left lens -->
+    <path d="M196 233 Q218 242 240 233" stroke="#8888aa" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <path d="M196 233 Q218 230 240 233" stroke="#8888aa" stroke-width="1.5" fill="none" opacity="0.3"/>
+    <!-- Right lens -->
+    <path d="M260 233 Q282 242 304 233" stroke="#8888aa" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <path d="M260 233 Q282 230 304 233" stroke="#8888aa" stroke-width="1.5" fill="none" opacity="0.3"/>
+    <!-- Bridge -->
+    <path d="M240 235 Q250 239 260 235" stroke="#8888aa" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <!-- Lens glare -->
+    <path d="M208 237 Q218 242 228 237" stroke="#c0d0ee" stroke-width="1" fill="none" opacity="0.3"/>
+    <path d="M272 237 Q282 242 292 237" stroke="#c0d0ee" stroke-width="1" fill="none" opacity="0.3"/>
+  </g>
+
+  <!-- ===== BOOK (tiny companion book, like from new_animals.txt Summarizer cat) ===== -->
+  <g transform="translate(305, 370) rotate(-20)" filter="url(#shadow)">
+    <rect x="-20" y="-14" width="40" height="28" rx="3" fill="#c41e3a"/>
+    <rect x="-17" y="-11" width="34" height="22" rx="2" fill="#fff8e8"/>
+    <!-- Text lines -->
+    <line x1="-10" y1="-4" x2="12" y2="-4" stroke="#bbb" stroke-width="0.8" stroke-linecap="round"/>
+    <line x1="-10" y1="1" x2="10" y2="1" stroke="#bbb" stroke-width="0.8" stroke-linecap="round"/>
+    <line x1="-10" y1="6" x2="8" y2="6" stroke="#bbb" stroke-width="0.8" stroke-linecap="round"/>
+    <!-- Spine -->
+    <rect x="-20" y="-14" width="40" height="28" rx="3" fill="none" stroke="#a01030" stroke-width="1.5"/>
+    <line x1="0" y1="-14" x2="0" y2="14" stroke="#a01030" stroke-width="1.8"/>
+    <!-- Bookmark ribbon -->
+    <line x1="8" y1="14" x2="11" y2="30" stroke="#ff6b9d" stroke-width="2" stroke-linecap="round"/>
+  </g>
+
+  <!-- ===== FLOATING CODE PARTICLES ===== -->
+  <g font-family="'Courier New', monospace" font-size="8" fill="#6c5ce7" opacity="0.25">
+    <text x="75" y="340">&lt;/&gt;</text>
+    <text x="380" y="310">{ }</text>
+    <text x="65" y="270">#</text>
+    <text x="400" y="370">~$</text>
+    <text x="390" y="260">def</text>
+    <text x="60" y="380">import</text>
+  </g>
+
+  <!-- ===== SPARKLE PARTICLES ===== -->
+  <g fill="#ffd700" opacity="0.4">
+    <circle cx="180" cy="170" r="2">
+      <animate attributeName="opacity" values="0;0.6;0" dur="2s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="320" cy="175" r="1.5">
+      <animate attributeName="opacity" values="0;0.5;0" dur="2.5s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="250" cy="155" r="1.8">
+      <animate attributeName="opacity" values="0;0.7;0" dur="3s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <!-- ===== GLOWING HEART (love for code) ===== -->
+  <g filter="url(#glow)">
+    <path d="M250 435 Q245 428 237 430 Q230 433 231 440 Q232 447 250 458 Q268 447 269 440 Q270 433 263 430 Q255 428 250 435Z" 
+          fill="#ff6b9d" opacity="0.5">
+      <animate attributeName="opacity" values="0.3;0.6;0.3" dur="2s" repeatCount="indefinite"/>
+    </path>
+  </g>
+
+  <!-- ===== TITLE TEXT ===== -->
+  <text x="250" y="482" text-anchor="middle" font-family="'Segoe UI', sans-serif" font-size="10" fill="#888" opacity="0.4" letter-spacing="3">your purr-fect code companion</text>
+</svg>

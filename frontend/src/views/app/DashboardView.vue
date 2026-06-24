@@ -75,7 +75,7 @@
             <div class="panel-body">
               <div v-for="a in agents" :key="a.role" class="agent-row">
                 <span class="agent-avatar" :style="{ background: agentColors[a.role] || '#6c5ce7' }">
-                  {{ roleMap[a.role] ? roleMap[a.role].charAt(0) : '?' }}
+                  {{ animalEmoji(a.role) }}
                 </span>
                 <div class="agent-meta">
                   <span class="agent-role">{{ roleMap[a.role] || a.role }}</span>
@@ -141,6 +141,11 @@ const roleMap = {
   weather: "天气",
   searcher: "搜索器",
   summarizer: "摘要器"
+}
+
+const animalEmoji = (role) => {
+  const map = { orchestrator: "🦉", calculator: "🦊", weather: "🐬", searcher: "🐶", summarizer: "🐱" }
+  return map[role] || "🤖"
 }
 
 const agentColors = {
