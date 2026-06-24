@@ -56,7 +56,7 @@ function formatTime(t) { if (!t) return ''; return new Date(t).toLocaleDateStrin
 .create-btn { display: flex; align-items: center; gap: 6px; padding: 10px 18px; background: #6c5ce7; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
 .create-btn:hover { background: #8b7cf7; box-shadow: 0 4px 12px rgba(108,92,231,0.3); }
 .workflow-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
-.wf-card { background: #141428; border: 1px solid rgba(108,92,231,0.15); border-radius: 12px; padding: 18px; cursor: pointer; transition: all 0.15s; }
+.wf-card { background: var(--bg-card); border: 1px solid rgba(108,92,231,0.15); border-radius: 12px; padding: 18px; cursor: pointer; transition: all 0.15s; }
 .wf-card:hover { border-color: #6c5ce7; box-shadow: 0 4px 16px rgba(108,92,231,0.1); }
 .wf-card-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
 .wf-type-badge { font-size: 10px; padding: 2px 8px; border-radius: 4px; background: rgba(108,92,231,0.1); color: #6c5ce7; font-weight: 500; }

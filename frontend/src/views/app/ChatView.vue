@@ -446,7 +446,7 @@ async function sendMessage() {
   display: flex;
   gap: 4px;
   padding: 12px 16px;
-  background: rgba(20,20,42,0.5);
+  background: var(--bg-glass);
   border-radius: 12px;
   width: fit-content;
 }

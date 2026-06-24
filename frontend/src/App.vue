@@ -15,42 +15,42 @@ const store = useAppStore()
 
 <style>
 :root {
-  /* Deep space - refined palette */
-  --bg-deep: #06060f;
-  --bg-primary: #0a0a16;
-  --bg-secondary: #10101e;
-  --bg-card: #14142a;
-  --bg-card-hover: #181832;
-  --bg-elevated: #1c1c38;
-  --bg-glass: rgba(20, 20, 42, 0.55);
-  --bg-glass-strong: rgba(26, 26, 52, 0.75);
+  /* Warm office palette */
+  --bg-deep: #f0ece4;
+  --bg-primary: #f5f2ec;
+  --bg-secondary: #ebe6dc;
+  --bg-card: #faf7f2;
+  --bg-card-hover: #fffcf7;
+  --bg-elevated: #ffffff;
+  --bg-glass: rgba(250, 247, 242, 0.72);
+  --bg-glass-strong: rgba(255, 255, 255, 0.88);
 
-  --border-color: rgba(108, 92, 231, 0.10);
-  --border-light: rgba(108, 92, 231, 0.18);
-  --border-active: rgba(108, 92, 231, 0.40);
+  --border-color: rgba(0, 0, 0, 0.06);
+  --border-light: rgba(0, 0, 0, 0.10);
+  --border-active: rgba(108, 92, 231, 0.30);
 
-  --text-primary: #e6e6f2;
-  --text-secondary: #9898b8;
-  --text-muted: #68688a;
-  --text-dim: #48486a;
+  --text-primary: #2a2620;
+  --text-secondary: #6a6558;
+  --text-muted: #9a9588;
+  --text-dim: #c0baae;
 
   --accent: #6c5ce7;
   --accent-light: #8b7cf7;
-  --accent-dim: rgba(108, 92, 231, 0.12);
-  --accent-glow: rgba(108, 92, 231, 0.08);
+  --accent-dim: rgba(108, 92, 231, 0.10);
+  --accent-glow: rgba(108, 92, 231, 0.06);
 
-  --green: #4ade80;
-  --green-bg: rgba(74, 222, 128, 0.08);
-  --red: #f87171;
-  --red-bg: rgba(248, 113, 113, 0.08);
-  --yellow: #facc15;
-  --yellow-bg: rgba(250, 204, 21, 0.08);
-  --orange: #fb923c;
-  --orange-bg: rgba(251, 146, 60, 0.08);
-  --blue: #60a5fa;
-  --blue-bg: rgba(96, 165, 250, 0.08);
-  --pink: #f472b6;
-  --pink-bg: rgba(244, 114, 182, 0.08);
+  --green: #22c55e;
+  --green-bg: rgba(34, 197, 94, 0.08);
+  --red: #ef4444;
+  --red-bg: rgba(239, 68, 68, 0.08);
+  --yellow: #eab308;
+  --yellow-bg: rgba(234, 179, 8, 0.08);
+  --orange: #f97316;
+  --orange-bg: rgba(249, 115, 22, 0.08);
+  --blue: #3b82f6;
+  --blue-bg: rgba(59, 130, 246, 0.08);
+  --pink: #ec4899;
+  --pink-bg: rgba(236, 72, 153, 0.08);
 
   --radius-xs: 4px;
   --radius-sm: 6px;
@@ -59,11 +59,11 @@ const store = useAppStore()
   --radius-xl: 18px;
   --radius-2xl: 24px;
 
-  --shadow-sm: 0 1px 4px rgba(0,0,0,0.3);
-  --shadow-md: 0 4px 16px rgba(0,0,0,0.25);
-  --shadow-lg: 0 8px 32px rgba(0,0,0,0.3);
-  --shadow-xl: 0 16px 48px rgba(0,0,0,0.4);
-  --shadow-glow: 0 4px 24px rgba(108,92,231,0.12);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.05);
+  --shadow-lg: 0 8px 28px rgba(0,0,0,0.06);
+  --shadow-xl: 0 16px 48px rgba(0,0,0,0.08);
+  --shadow-glow: 0 4px 20px rgba(108,92,231,0.10);
 
   --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -71,7 +71,7 @@ const store = useAppStore()
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
-html { color-scheme: dark; }
+html { color-scheme: light; }
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   background: var(--bg-deep);
@@ -107,7 +107,7 @@ code, pre { font-family: 'JetBrains Mono', monospace; font-size: 0.9em; }
 .card-hover { transition: var(--transition-slow); }
 .card-hover:hover {
   transform: translateY(-1px);
-  box-shadow: 0 8px 32px rgba(108,92,231,0.08);
+  box-shadow: 0 8px 32px rgba(108,92,231,0.06);
   border-color: var(--border-active);
 }
 
