@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="workflow-editor-page">
     <div class="editor-toolbar">
       <button class="back-btn" @click="$router.push('/workflow')">
@@ -6,7 +6,7 @@
         杩斿洖
       </button>
       <div class="toolbar-info">
-        <input v-model="workflowName" class="title-input" placeholder="宸ヤ綔娴佸悕绉? />
+        <input v-model="workflowName" class="title-input" placeholder="工作流名称?" />
         <select v-model="workflowStatus" class="status-select" @change="saveWorkflow">
           <option value="draft">鑽夌</option>
           <option value="active">鍚敤</option>
@@ -42,20 +42,20 @@
           <div class="field" v-if="selectedNode.type === 'task'">
             <label>Agent 瑙掕壊</label>
             <select v-model="selectedNode.data.agentRole">
-              <option value="">鏃?/option>
+              <option value="">鏃</option>
               <option v-for="a in agents" :key="a" :value="a">{{ a }}</option>
             </select>
           </div>
           <div class="field" v-if="selectedNode.type === 'task'">
-            <label>鎻愮ず璇嶆ā鏉?/label>
+            <label>鎻愮ず璇嶆ā鏉</label>
             <textarea v-model="selectedNode.data.prompt" rows="3" placeholder="浣跨敤 {{var}} 寮曠敤鍙橀噺"></textarea>
           </div>
           <div class="field" v-if="selectedNode.type === 'condition'">
-            <label>鏉′欢琛ㄨ揪寮?/label>
+            <label>鏉件欢琛达揪寮</label>
             <input v-model="selectedNode.data.condition" placeholder="濡? result.success === true" />
           </div>
           <div class="field" v-if="selectedNode.type === 'parallel'">
-            <label>骞惰瑙掕壊锛堥€楀彿鍒嗛殧锛?/label>
+            <label>骞惰瑙掕壊锛堥€楀彿鍒嗛殧锛</label>
             <input v-model="selectedNode.data.parallelRoles" placeholder="calculator,searcher" />
           </div>
         </div>
@@ -131,7 +131,7 @@ async function loadWorkflow(id) {
 }
 
 function addNode(type) {
-  const labels = { start: '寮€濮?, task: '鏂颁换鍔?, condition: '鏉′欢鍒ゆ柇', parallel: '骞惰鍒嗘敮', merge: '鍚堝苟鑺傜偣', end: '缁撴潫' }
+  const labels = { start: 'start', task: 'task', condition: 'condition', parallel: 'parallel', merge: 'merge', end: 'end' }
   const id = 'n_' + Date.now()
   const pos = { x: 100 + Math.random() * 200, y: 100 + Math.random() * 200 }
   nodes.value = [...nodes.value, { id, type, position: pos, data: { label: labels[type] || type } }]

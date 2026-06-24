@@ -403,6 +403,8 @@ function eventColor(type) {
   border-radius: var(--radius-lg);
   overflow: hidden;
   position: relative;
+  background: #0f0c29;
+  background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
 }
 
 .info-panel {
@@ -686,4 +688,7 @@ function eventColor(type) {
   .office-panel { flex: none; height: 50vh; }
 }
 </style>
+
+
+
 
