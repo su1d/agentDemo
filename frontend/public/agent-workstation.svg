@@ -219,114 +219,111 @@
   <circle cx="314" cy="470" r="4" fill="#1a1a2e"/>
   <circle cx="344" cy="470" r="4" fill="#1a1a2e"/>
 
-  <!-- ====== 智能体人物（坐反→已修正：面朝屏幕） ====== -->
-  <!-- 躯干 -->
-  <rect x="268" y="305" width="64" height="85" rx="12" fill="#e8e8ee"/>
-  <!-- 衣物细节 - 程序员 T 恤 -->
-  <rect x="275" y="305" width="50" height="15" rx="6" fill="#ffffff"/>
-  <!-- 衣领 -->
-  <path d="M282 305 L300 320 L318 305" fill="none" stroke="#d0d0d8" stroke-width="1.5"/>
-  <!-- T恤图案 -->
-  <circle cx="300" cy="340" r="10" fill="none" stroke="#6c63ff" stroke-width="1.5" opacity="0.4"/>
-  <circle cx="300" cy="340" r="5" fill="#6c63ff" opacity="0.15"/>
+    <!-- ====== 智能体人物 ====== -->
+  <!-- 躯干（加长，成熟比例） -->
+  <rect x="264" y="280" width="72" height="110" rx="10" fill="#e8e8ee"/>
+  <!-- 衣物 - 马甲/衬衫层叠 -->
+  <rect x="268" y="280" width="64" height="40" rx="6" fill="#ffffff"/>
+  <rect x="268" y="315" width="64" height="75" rx="6" fill="#d4d0dc"/>
+  <!-- 衣领（衬衫翻领） -->
+  <path d="M283 280 L300 298 L317 280" fill="none" stroke="#c8c4d0" stroke-width="1.8"/>
+  <path d="M283 280 L300 298" fill="none" stroke="#f0ece4" stroke-width="0.8"/>
+  <path d="M317 280 L300 298" fill="none" stroke="#f0ece4" stroke-width="0.8"/>
+  <!-- 领带 -->
+  <path d="M296 298 L300 340 L304 298" fill="#6c5ce7" opacity="0.5"/>
+  <!-- 马甲V领 -->
+  <path d="M272 310 L300 298 L328 310 L328 390 L272 390 Z" fill="none" stroke="#b8b4c0" stroke-width="0.5" opacity="0.3"/>
 
-  <!-- 左臂（伸向键盘） -->
-  <path d="M268 315 Q245 340 260 385" fill="none" stroke="#e8e8ee" stroke-width="18" stroke-linecap="round"/>
-  <!-- 左手 -->
-  <ellipse cx="265" cy="390" rx="12" ry="8" fill="url(#skinGrad)"/>
-  <!-- 手指 -->
-  <line x1="265" y1="394" x2="265" y2="385" stroke="#e8a87c" stroke-width="1.5" stroke-linecap="round" opacity="0.3"/>
+  <!-- 左臂（自然伸向键盘） -->
+  <path d="M264 292 Q240 320 256 380" fill="none" stroke="#e8e8ee" stroke-width="16" stroke-linecap="round"/>
+  <ellipse cx="260" cy="385" rx="11" ry="9" fill="url(#skinGrad)"/>
+  <line x1="258" y1="393" x2="256" y2="384" stroke="#e8a87c" stroke-width="1.5" stroke-linecap="round" opacity="0.3"/>
 
-  <!-- 右臂（伸向鼠标） -->
-  <path d="M332 315 Q355 340 345 385" fill="none" stroke="#e8e8ee" stroke-width="18" stroke-linecap="round"/>
-  <!-- 右手 -->
-  <ellipse cx="345" cy="392" rx="12" ry="8" fill="url(#skinGrad)"/>
+  <!-- 右臂（自然伸向鼠标） -->
+  <path d="M336 292 Q358 318 348 380" fill="none" stroke="#e8e8ee" stroke-width="16" stroke-linecap="round"/>
+  <ellipse cx="348" cy="388" rx="11" ry="9" fill="url(#skinGrad)"/>
 
   <!-- 脖子 -->
-  <rect x="290" y="278" width="20" height="30" rx="8" fill="url(#skinGrad)"/>
+  <rect x="290" y="256" width="20" height="26" rx="7" fill="url(#skinGrad)"/>
 
-  <!-- 头部 -->
-  <ellipse cx="300" cy="250" rx="45" ry="52" fill="url(#skinGrad)"/>
+  <!-- ====== 头部（缩小，偏写实比例） ====== -->
+  <ellipse cx="300" cy="228" rx="35" ry="42" fill="url(#skinGrad)"/>
 
-  <!-- 头发 -->
-  <path d="M255 240 Q255 195 300 188 Q345 195 345 240" fill="#1a1a2e"/>
-  <path d="M255 240 Q255 210 300 200 Q345 210 345 240" fill="#2c2c3e" opacity="0.4"/>
+  <!-- ====== 头发（饱满发量） ====== -->
+  <!-- 主发块 -->
+  <path d="M265 220 Q265 178 300 172 Q335 178 335 220 Q335 198 320 192 Q310 196 300 190 Q290 196 280 192 Q265 198 265 220" fill="#1a1a2e"/>
+  <!-- 上侧发量补足 -->
+  <path d="M270 200 Q280 178 300 176 Q320 178 330 200 Q325 186 310 184 Q300 182 290 184 Q275 186 270 200" fill="#2c2c3e" opacity="0.5"/>
   <!-- 刘海 -->
-  <path d="M260 235 Q270 215 285 210 Q295 218 300 210 Q310 218 315 210 Q330 215 340 235" fill="#1a1a2e"/>
-  <!-- 两侧头发 -->
-  <path d="M255 240 Q248 230 250 218 Q254 208 262 215" fill="#1a1a2e"/>
-  <path d="M345 240 Q352 230 350 218 Q346 208 338 215" fill="#1a1a2e"/>
+  <path d="M268 215 Q272 198 285 192 Q292 204 300 190 Q308 204 315 192 Q328 198 332 215" fill="#1a1a2e"/>
+  <path d="M272 218 Q275 202 285 198 Q288 206 295 200 Q302 208 308 198 Q315 206 318 200 Q325 202 328 218" fill="#3a3a50" opacity="0.4"/>
+  <path d="M265 220 Q258 210 260 198 Q264 190 270 198" fill="#1a1a2e"/>
+  <path d="M335 220 Q342 210 340 198 Q336 190 330 198" fill="#1a1a2e"/>
+  <path d="M268 218 Q272 210 280 206 Q290 210 300 208 Q310 210 320 206 Q328 210 332 218" fill="#1a1a2e" opacity="0.3"/>
 
   <!-- 眉毛 -->
-  <path d="M276 236 Q284 232 294 235" fill="none" stroke="#4a3528" stroke-width="2.5" stroke-linecap="round"/>
-  <path d="M306 235 Q316 232 324 236" fill="none" stroke="#4a3528" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M278 215 Q286 212 294 215" fill="none" stroke="#3a2520" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M306 215 Q314 212 322 215" fill="none" stroke="#3a2520" stroke-width="2.2" stroke-linecap="round"/>
 
-  <!-- 眼睛（看向屏幕方向→偏右） -->
-  <ellipse cx="286" cy="250" rx="8" ry="7" fill="#ffffff"/>
-  <ellipse cx="289" cy="251" rx="5" ry="5.5" fill="#1a1a2e"/>
-  <ellipse cx="290" cy="249" rx="2.5" ry="2.5" fill="#ffffff"/>
-  
-  <ellipse cx="314" cy="250" rx="8" ry="7" fill="#ffffff"/>
-  <ellipse cx="317" cy="251" rx="5" ry="5.5" fill="#1a1a2e"/>
-  <ellipse cx="318" cy="249" rx="2.5" ry="2.5" fill="#ffffff"/>
+  <!-- 眼睛 -->
+  <ellipse cx="288" cy="228" rx="7" ry="6.5" fill="#ffffff"/>
+  <ellipse cx="290" cy="229" rx="4.5" ry="5" fill="#2a2a3e"/>
+  <ellipse cx="291" cy="227" rx="2" ry="2" fill="#ffffff"/>
+  <ellipse cx="312" cy="228" rx="7" ry="6.5" fill="#ffffff"/>
+  <ellipse cx="314" cy="229" rx="4.5" ry="5" fill="#2a2a3e"/>
+  <ellipse cx="315" cy="227" rx="2" ry="2" fill="#ffffff"/>
 
   <!-- 睫毛 -->
-  <g stroke="#4a3528" stroke-width="0.8" opacity="0.4">
-    <line x1="279" y1="245" x2="277" y2="241"/>
-    <line x1="282" y1="244" x2="280" y2="240"/>
-    <line x1="321" y1="245" x2="323" y2="241"/>
-    <line x1="318" y1="244" x2="320" y2="240"/>
+  <g stroke="#3a2520" stroke-width="0.7" opacity="0.3">
+    <line x1="282" y1="223" x2="280" y2="220"/>
+    <line x1="285" y1="222" x2="283" y2="219"/>
+    <line x1="318" y1="223" x2="320" y2="220"/>
+    <line x1="315" y1="222" x2="317" y2="219"/>
   </g>
 
   <!-- 眼镜 -->
-  <rect x="274" y="242" width="24" height="18" rx="4" fill="none" stroke="#5a5a7a" stroke-width="1.5"/>
-  <rect x="302" y="242" width="24" height="18" rx="4" fill="none" stroke="#5a5a7a" stroke-width="1.5"/>
-  <line x1="298" y1="251" x2="302" y2="251" stroke="#5a5a7a" stroke-width="1.5"/>
-  <line x1="274" y1="248" x2="268" y2="245" stroke="#5a5a7a" stroke-width="1.5"/>
-  <line x1="326" y1="248" x2="332" y2="245" stroke="#5a5a7a" stroke-width="1.5"/>
-  <!-- 镜片反射 -->
-  <rect x="276" y="244" width="20" height="14" rx="3" fill="#448aff" opacity="0.06"/>
-  <rect x="304" y="244" width="20" height="14" rx="3" fill="#448aff" opacity="0.06"/>
+  <rect x="274" y="221" width="22" height="16" rx="4" fill="none" stroke="#5a5a7a" stroke-width="1.2"/>
+  <rect x="304" y="221" width="22" height="16" rx="4" fill="none" stroke="#5a5a7a" stroke-width="1.2"/>
+  <line x1="296" y1="229" x2="304" y2="229" stroke="#5a5a7a" stroke-width="1.2"/>
+  <line x1="274" y1="226" x2="268" y2="224" stroke="#5a5a7a" stroke-width="1.2"/>
+  <line x1="326" y1="226" x2="332" y2="224" stroke="#5a5a7a" stroke-width="1.2"/>
+  <rect x="276" y="223" width="18" height="12" rx="3" fill="#448aff" opacity="0.05"/>
+  <rect x="306" y="223" width="18" height="12" rx="3" fill="#448aff" opacity="0.05"/>
 
   <!-- 耳朵 -->
-  <ellipse cx="253" cy="252" rx="6" ry="10" fill="url(#skinGrad)"/>
-  <ellipse cx="253" cy="252" rx="3" ry="5" fill="#e8a87c" opacity="0.4"/>
-  <ellipse cx="347" cy="252" rx="6" ry="10" fill="url(#skinGrad)"/>
-  <ellipse cx="347" cy="252" rx="3" ry="5" fill="#e8a87c" opacity="0.4"/>
+  <ellipse cx="263" cy="230" rx="5" ry="8" fill="url(#skinGrad)"/>
+  <ellipse cx="263" cy="230" rx="2.5" ry="4" fill="#e8a87c" opacity="0.3"/>
+  <ellipse cx="337" cy="230" rx="5" ry="8" fill="url(#skinGrad)"/>
+  <ellipse cx="337" cy="230" rx="2.5" ry="4" fill="#e8a87c" opacity="0.3"/>
 
   <!-- 鼻子 -->
-  <path d="M298 256 Q300 265 303 256" fill="none" stroke="#d4a574" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M299 234 Q300 242 302 234" fill="none" stroke="#d4a574" stroke-width="1.2" stroke-linecap="round"/>
 
   <!-- 嘴巴（微笑） -->
-  <path d="M288 272 Q300 284 312 272" fill="none" stroke="#c97b5a" stroke-width="2" stroke-linecap="round"/>
+  <path d="M290 250 Q300 260 310 250" fill="none" stroke="#c97b5a" stroke-width="1.8" stroke-linecap="round"/>
+  <path d="M293 252 Q300 256 307 252" fill="none" stroke="#e8a87c" stroke-width="0.6" stroke-linecap="round" opacity="0.4"/>
 
   <!-- 面部红晕 -->
-  <ellipse cx="275" cy="265" rx="8" ry="4" fill="#ff6b6b" opacity="0.08"/>
-  <ellipse cx="325" cy="265" rx="8" ry="4" fill="#ff6b6b" opacity="0.08"/>
+  <ellipse cx="278" cy="243" rx="7" ry="3.5" fill="#ff6b6b" opacity="0.06"/>
+  <ellipse cx="322" cy="243" rx="7" ry="3.5" fill="#ff6b6b" opacity="0.06"/>
 
-  <!-- 智能体标识 - 头顶圆形指示器 -->
-  <circle cx="285" cy="198" r="3.5" fill="#6c63ff">
-    <animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite"/>
-  </circle>
-  <circle cx="300" cy="194" r="3.5" fill="#448aff">
-    <animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/>
-  </circle>
-  <circle cx="315" cy="198" r="3.5" fill="#6c63ff">
-    <animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite"/>
-  </circle>
-  <!-- 连接线 -->
-  <line x1="285" y1="198" x2="300" y2="194" stroke="#6c63ff" stroke-width="0.8" opacity="0.3"/>
-  <line x1="300" y1="194" x2="315" y2="198" stroke="#448aff" stroke-width="0.8" opacity="0.3"/>
+  <!-- 头顶智能体标识 -->
+  <circle cx="287" cy="178" r="3" fill="#6c63ff"/>
+  <circle cx="300" cy="174" r="3" fill="#448aff"/>
+  <circle cx="313" cy="178" r="3" fill="#6c63ff"/>
+  <line x1="287" y1="178" x2="300" y2="174" stroke="#6c63ff" stroke-width="0.8" opacity="0.3"/>
+  <line x1="300" y1="174" x2="313" y2="178" stroke="#448aff" stroke-width="0.8" opacity="0.3"/>
 
   <!-- ====== 腿部 ====== -->
-  <rect x="276" y="388" width="20" height="35" rx="6" fill="#1a1a2e"/>
-  <rect x="304" y="388" width="20" height="35" rx="6" fill="#1a1a2e"/>
+  <rect x="276" y="388" width="22" height="42" rx="5" fill="#1a1a2e"/>
+  <rect x="302" y="388" width="22" height="42" rx="5" fill="#1a1a2e"/>
 
   <!-- ====== 鞋子 ====== -->
-  <rect x="274" y="420" width="24" height="12" rx="5" fill="#0d0d1a"/>
-  <rect x="302" y="420" width="24" height="12" rx="5" fill="#0d0d1a"/>
+  <rect x="274" y="427" width="26" height="10" rx="4" fill="#0d0d1a"/>
+  <rect x="300" y="427" width="26" height="10" rx="4" fill="#0d0d1a"/>
 
-  <!-- ====== 桌上物品 ====== -->
+
+<!-- ====== 桌上物品 ====== -->
   <!-- 马克杯 -->
   <rect x="158" y="332" width="26" height="28" rx="4" fill="#e74c3c"/>
   <ellipse cx="171" cy="332" rx="13" ry="5" fill="#c0392b"/>
@@ -357,3 +354,4 @@
   <line x1="280" y1="565" x2="520" y2="565" stroke="#6c63ff" stroke-width="1" opacity="0.2"/>
   <line x1="340" y1="568" x2="460" y2="568" stroke="#6c63ff" stroke-width="0.5" opacity="0.1"/>
 </svg>
+

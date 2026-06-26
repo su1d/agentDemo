@@ -38,38 +38,38 @@ function createHumanoidAgent(color) {
   chairBack.position.set(0, 0.16, -0.1); g.add(chairBack)
 
   // Torso
-  const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.06, 0.08, 6, 8), bodyMat)
-  torso.position.y = 0.14; g.add(torso)
+  const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.065, 0.14, 6, 8), bodyMat)
+  torso.position.y = 0.17; g.add(torso)
 
   // Head
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.05, 10, 10), skinMat)
-  head.position.set(0, 0.23, 0); g.add(head)
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.04, 12, 12), skinMat)
+  head.position.set(0, 0.245, 0); g.add(head)
 
   // Hair
   const hairMat = new THREE.MeshStandardMaterial({ color: c.clone().multiplyScalar(0.6), roughness: 0.8 })
   const hair = new THREE.Mesh(new THREE.SphereGeometry(0.048, 8, 8), hairMat)
-  hair.scale.set(1.05, 0.4, 1.0); hair.position.set(0, 0.255, 0.005); g.add(hair)
+  hair.scale.set(1.2, 0.7, 1.1); hair.position.set(0, 0.28, 0.005); g.add(hair)
 
   // Eyes
   const eyeMat = new THREE.MeshStandardMaterial({ color: 0x111111 })
   const eyeWhite = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 0.1 })
   for (let s = -1; s <= 1; s += 2) {
     const ew = new THREE.Mesh(new THREE.SphereGeometry(0.016, 8, 8), eyeWhite)
-    ew.scale.set(1, 0.7, 0.5); ew.position.set(s * 0.018, 0.24, -0.045); g.add(ew)
+    ew.scale.set(1, 0.7, 0.5); ew.position.set(s * 0.016, 0.252, -0.038); g.add(ew)
     const ep = new THREE.Mesh(new THREE.SphereGeometry(0.01, 6, 6), eyeMat)
-    ep.position.set(s * 0.018, 0.24, -0.04); g.add(ep)
+    ep.position.set(s * 0.016, 0.252, -0.035); g.add(ep)
     const hl = new THREE.Mesh(new THREE.SphereGeometry(0.004, 6, 6), new THREE.MeshStandardMaterial({ color: 0xffffff }))
-    hl.position.set(s * 0.021, 0.243, -0.04); g.add(hl)
+    hl.position.set(s * 0.019, 0.255, -0.035); g.add(hl)
   }
 
   // Arms resting on desk
   for (let s = -1; s <= 1; s += 2) {
     const arm = new THREE.Mesh(new THREE.CapsuleGeometry(0.018, 0.07, 6, 8), bodyMat)
-    arm.position.set(s * 0.075, 0.11, 0.04); arm.rotation.z = s * 0.15; g.add(arm)
+    arm.position.set(s * 0.08, 0.14, 0.04); arm.rotation.z = s * 0.15; g.add(arm)
     const forearm = new THREE.Mesh(new THREE.CapsuleGeometry(0.015, 0.05, 6, 8), bodyMat)
-    forearm.position.set(s * 0.075, 0.07, 0.08); forearm.rotation.x = -0.5; g.add(forearm)
+    forearm.position.set(s * 0.08, 0.09, 0.08); forearm.rotation.x = -0.5; g.add(forearm)
     const hand = new THREE.Mesh(new THREE.SphereGeometry(0.014, 6, 6), skinMat)
-    hand.position.set(s * 0.075, 0.06, 0.11); g.add(hand)
+    hand.position.set(s * 0.08, 0.075, 0.11); g.add(hand)
   }
 
   // Monitor stand + screen
@@ -116,3 +116,4 @@ function createHumanoidAgent(color) {
   g.userData.agentType = 'human'
   return g
 }
+

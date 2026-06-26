@@ -57,237 +57,223 @@ const AGENT_COLORS = {
 function createSeatedHumanBody(color) {
   const g = new THREE.Group()
   const c = new THREE.Color(color)
+  
   const skinMat = new THREE.MeshStandardMaterial({ color: 0xf5d6c6, roughness: 0.3, metalness: 0 })
-  const clothMat = new THREE.MeshStandardMaterial({ color: c, roughness: 0.4, metalness: 0.1, emissive: c, emissiveIntensity: 0.03 })
-  const darkMat = new THREE.MeshStandardMaterial({ color: 0x3a3a4e, roughness: 0.5 })
-  const chairMat = new THREE.MeshStandardMaterial({ color: 0x6b5d4f, roughness: 0.6, metalness: 0.1 })
-  const highlightMat = new THREE.MeshStandardMaterial({ color: 0xfff4e8, roughness: 0.6, metalness: 0 })
+  const skinDarkMat = new THREE.MeshStandardMaterial({ color: 0xe8c8b8, roughness: 0.3, metalness: 0 })
+  const bodyMat = new THREE.MeshStandardMaterial({ color: c, roughness: 0.35, metalness: 0.08, emissive: c, emissiveIntensity: 0.02 })
+  const darkMat = new THREE.MeshStandardMaterial({ color: 0x3a3a50, roughness: 0.5 })
   const shoeMat = new THREE.MeshStandardMaterial({ color: 0x2a2a3e, roughness: 0.7 })
   const whiteMat = new THREE.MeshStandardMaterial({ color: 0xffffff })
   const pupilMat = new THREE.MeshStandardMaterial({ color: 0x222233 })
-  const blushMat = new THREE.MeshStandardMaterial({ color: 0xffaaaa, transparent: true, opacity: 0.35 })
-  const mouthMat = new THREE.MeshStandardMaterial({ color: 0xd47080 })
-
-  // Chair base
-  const chairSeat = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.025, 0.16), chairMat)
-  chairSeat.position.set(0, -0.015, 0.01); g.add(chairSeat)
-  const chairBack = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.14, 0.02), chairMat)
-  chairBack.position.set(0, 0.09, -0.08); g.add(chairBack)
+  const irisMat = new THREE.MeshStandardMaterial({ color: 0x5a8a5a, roughness: 0.1 })
+  const mouthMat = new THREE.MeshStandardMaterial({ color: 0xd4758b })
+  const hairMat = new THREE.MeshStandardMaterial({ color: c.clone().multiplyScalar(0.55), roughness: 0.6 })
+  const hairLightMat = new THREE.MeshStandardMaterial({ color: c.clone().multiplyScalar(0.7), roughness: 0.6 })
+  
+  // ---- LEGS (seated posture) ----
   for (let s = -1; s <= 1; s += 2) {
-    const ar = new THREE.Mesh(new THREE.BoxGeometry(0.015, 0.04, 0.08), chairMat)
-    ar.position.set(s * 0.09, 0.04, 0.02); g.add(ar)
+    const thigh = new THREE.Mesh(new THREE.CylinderGeometry(0.026, 0.022, 0.08, 8), darkMat)
+    thigh.position.set(s * 0.03, -0.025, 0.05); thigh.rotation.x = -0.5; g.add(thigh)
+    const shin = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.016, 0.07, 8), darkMat)
+    shin.position.set(s * 0.03, -0.075, 0.0); shin.rotation.x = 0.3; g.add(shin)
+    const shoe = new THREE.Mesh(new THREE.BoxGeometry(0.026, 0.012, 0.04), shoeMat)
+    shoe.position.set(s * 0.03, -0.10, -0.01); g.add(shoe)
   }
-
-  // Legs (sitting posture)
-  const leftLegPivot = new THREE.Group(); leftLegPivot.name = "leftLegPivot"
-  const rightLegPivot = new THREE.Group(); rightLegPivot.name = "rightLegPivot"
-  for (let s = -1; s <= 1; s += 2) {
-    const pivot = s < 0 ? leftLegPivot : rightLegPivot
-    const thigh = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.022, 0.09, 8), darkMat)
-    thigh.position.set(s * 0.03, -0.015, 0.04); thigh.rotation.x = -0.4; pivot.add(thigh)
-    const shin = new THREE.Mesh(new THREE.CylinderGeometry(0.024, 0.017, 0.07, 8), darkMat)
-    shin.position.set(s * 0.03, -0.07, -0.01); shin.rotation.x = 0.3; pivot.add(shin)
-    const shoe = new THREE.Mesh(new THREE.BoxGeometry(0.028, 0.015, 0.04), shoeMat)
-    shoe.position.set(s * 0.03, -0.095, -0.02); pivot.add(shoe)
-  }
-  g.add(leftLegPivot); g.add(rightLegPivot)
-
-  // Body (torso)
-  const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.075, 0.14, 10), clothMat)
-  torso.position.set(0, 0.11, 0.01); torso.castShadow = true; g.add(torso)
-
+  
+  // ---- TORSO ----
+  const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.07, 0.18, 10), bodyMat)
+  torso.position.set(0, 0.12, 0.01); torso.castShadow = true; g.add(torso)
+  
   // Collar
-  const collar = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.015, 0.015), highlightMat)
-  collar.position.set(0, 0.18, -0.03); g.add(collar)
-  const collar2 = collar.clone(); collar2.position.set(0, 0.18, 0.03); g.add(collar2)
-
-  // Arms
-  const leftArmPivot = new THREE.Group(); leftArmPivot.name = "leftArmPivot"
-  const rightArmPivot = new THREE.Group(); rightArmPivot.name = "rightArmPivot"
+  const collar = new THREE.Mesh(new THREE.TorusGeometry(0.055, 0.005, 6, 12), new THREE.MeshStandardMaterial({ color: 0xeeeeee, roughness: 0.2 }))
+  collar.position.set(0, 0.17, 0.01); collar.rotation.x = 0.1; collar.scale.set(1, 0.4, 0.5); g.add(collar)
+  
+  // ---- ARMS ----
   for (let s = -1; s <= 1; s += 2) {
-    const pivot = s < 0 ? leftArmPivot : rightArmPivot
-    const upperArm = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.022, 0.09, 7), clothMat)
-    upperArm.position.set(s * 0.08, 0.15, -0.02); upperArm.rotation.z = s * 0.3; upperArm.rotation.x = -0.4; pivot.add(upperArm)
-    const forearm = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.017, 0.07, 7), skinMat)
-    forearm.position.set(s * 0.10, 0.07, 0.05); forearm.rotation.z = s * 0.1; forearm.rotation.x = 0.8; pivot.add(forearm)
-    const hand = new THREE.Mesh(new THREE.SphereGeometry(0.018, 6, 6), skinMat)
-    hand.position.set(s * 0.10, 0.04, 0.09); pivot.add(hand)
+    const upper = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.018, 0.08, 7), bodyMat)
+    upper.position.set(s * 0.075, 0.135, -0.01); upper.rotation.z = s * 0.25; upper.rotation.x = -0.3; g.add(upper)
+    const lower = new THREE.Mesh(new THREE.CylinderGeometry(0.017, 0.015, 0.065, 7), skinMat)
+    lower.position.set(s * 0.088, 0.07, 0.06); lower.rotation.z = s * 0.1; lower.rotation.x = 0.6; g.add(lower)
+    const hand = new THREE.Mesh(new THREE.SphereGeometry(0.016, 6, 6), skinMat)
+    hand.position.set(s * 0.090, 0.04, 0.095); g.add(hand)
   }
-  g.add(leftArmPivot); g.add(rightArmPivot)
-
-  // Neck
-  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.045, 0.04, 8), skinMat)
-  neck.position.set(0, 0.21, 0.02); g.add(neck)
-
-  // Head - BIGGER and rounder
-  const headGroup = new THREE.Group(); headGroup.userData.isHeadGroup = true
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.1, 16, 14), skinMat)
-  head.position.set(0, 0, 0); head.scale.set(1, 0.9, 0.88); head.castShadow = true; headGroup.add(head)
-
-  // Hair - more voluminous
-  const hairColor = c.clone().multiplyScalar(0.7)
-  hairColor.r = Math.min(hairColor.r + 0.15, 1)
-  hairColor.g = Math.min(hairColor.g + 0.15, 1)
-  hairColor.b = Math.min(hairColor.b + 0.15, 1)
-  const hairMat = new THREE.MeshStandardMaterial({ color: hairColor, roughness: 0.7 })
-  const hairLightMat = new THREE.MeshStandardMaterial({ color: hairColor.clone().multiplyScalar(1.3), roughness: 0.7 })
-  const hairBase = new THREE.Mesh(new THREE.SphereGeometry(0.105, 12, 10), hairMat)
-  hairBase.position.set(0, 0.325, 0.02); hairBase.scale.set(1.02, 0.38, 0.95); headGroup.add(hairBase)
+  
+  // ---- NECK ----
+  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.04, 0.05, 8), skinMat)
+  neck.position.set(0, 0.21, 0.01); g.add(neck)
+  
+  // ---- HEAD (proportionate) ----
+  const headGroup = new THREE.Group()
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.055, 16, 14), skinMat)
+  head.scale.set(1, 0.9, 0.85); head.castShadow = true; headGroup.add(head)
+  
+  // Hair - sculpted style
+  const hairMain = new THREE.Mesh(new THREE.SphereGeometry(0.078, 12, 10), hairMat)
+  hairMain.position.set(0, 0.06, 0.015); hairMain.scale.set(1.15, 0.7, 0.95); headGroup.add(hairMain)
+  
+  // Hair fringe / bangs - swept style
+  for (let i = 0; i < 7; i++) {
+    const bang = new THREE.Mesh(new THREE.BoxGeometry(0.015, 0.025, 0.01), i % 2 === 0 ? hairLightMat : hairMat)
+    bang.position.set((i - 3) * 0.016, 0.055, -0.052); bang.rotation.x = 0.4; bang.rotation.z = (i - 3) * 0.06; headGroup.add(bang)
+  }
+  
+  // Side hair
   for (let s = -1; s <= 1; s += 2) {
-    const sideHair = new THREE.Mesh(new THREE.BoxGeometry(0.025, 0.06, 0.02), hairMat)
-    sideHair.position.set(s * 0.095, 0.28, 0.01); sideHair.rotation.z = s * 0.15; headGroup.add(sideHair)
+    const side = new THREE.Mesh(new THREE.BoxGeometry(0.015, 0.055, 0.02), hairLightMat)
+    side.position.set(s * 0.06, 0.02, 0.01); side.rotation.z = s * 0.15; headGroup.add(side)
   }
-  for (let i = 0; i < 5; i++) {
-    const bang = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.035, 0.012), i === 2 ? hairLightMat : hairMat)
-    bang.position.set((i - 2) * 0.022, 0.30, -0.065); bang.rotation.x = 0.25; headGroup.add(bang)
-  }
-  const tuft = new THREE.Mesh(new THREE.ConeGeometry(0.018, 0.035, 6), hairMat)
-  tuft.position.set(0, 0.355, 0.01); headGroup.add(tuft)
-
-  // Eyes - BIGGER and shinier
+  
+  // Top volume
+  const top = new THREE.Mesh(new THREE.ConeGeometry(0.03, 0.03, 6), hairMat)
+  top.position.set(-0.01, 0.068, -0.01); top.rotation.x = -0.2; headGroup.add(top)
+  
+  // ---- FACE ----
+  // Eyes
   for (let s = -1; s <= 1; s += 2) {
-    const eyeWhite = new THREE.Mesh(new THREE.SphereGeometry(0.028, 10, 10), whiteMat)
-    eyeWhite.position.set(s * 0.032, 0.29, -0.075); eyeWhite.scale.set(1, 1.3, 0.35); headGroup.add(eyeWhite)
-    const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.018, 10, 10), pupilMat)
-    pupil.position.set(s * 0.032, 0.288, -0.088); headGroup.add(pupil)
-    const h1 = new THREE.Mesh(new THREE.SphereGeometry(0.007, 6, 6), whiteMat)
-    h1.position.set(s * 0.037, 0.294, -0.092); headGroup.add(h1)
-    const h2 = new THREE.Mesh(new THREE.SphereGeometry(0.004, 6, 6), whiteMat)
-    h2.position.set(s * 0.027, 0.284, -0.092); headGroup.add(h2)
+    const ew = new THREE.Mesh(new THREE.SphereGeometry(0.022, 10, 10), whiteMat)
+    ew.position.set(s * 0.022, 0.03, -0.055); ew.scale.set(1, 1.1, 0.3); headGroup.add(ew)
+    const ir = new THREE.Mesh(new THREE.SphereGeometry(0.015, 10, 10), irisMat)
+    ir.position.set(s * 0.022, 0.028, -0.058); headGroup.add(ir)
+    const pu = new THREE.Mesh(new THREE.SphereGeometry(0.008, 8, 8), pupilMat)
+    pu.position.set(s * 0.022, 0.028, -0.06); headGroup.add(pu)
+    const hl = new THREE.Mesh(new THREE.SphereGeometry(0.005, 6, 6), new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 0.2 }))
+    hl.position.set(s * 0.026, 0.036, -0.06); headGroup.add(hl)
   }
-
-  // Blush
-  for (let s = -1; s <= 1; s += 2) {
-    const blush = new THREE.Mesh(new THREE.SphereGeometry(0.018, 8, 8), blushMat)
-    blush.position.set(s * 0.045, 0.272, -0.065); blush.scale.set(1, 0.6, 0.4); headGroup.add(blush)
-  }
-
-  // Mouth (tiny smile)
-  const mouth = new THREE.Mesh(new THREE.BoxGeometry(0.018, 0.003, 0.003), mouthMat)
-  mouth.position.set(0, 0.272, -0.082); headGroup.add(mouth)
-
+  
   // Eyebrows
   for (let s = -1; s <= 1; s += 2) {
-    const brow = new THREE.Mesh(new THREE.BoxGeometry(0.018, 0.003, 0.003), hairMat)
-    brow.position.set(s * 0.032, 0.305, -0.082); headGroup.add(brow)
+    const brow = new THREE.Mesh(new THREE.BoxGeometry(0.016, 0.0025, 0.003), new THREE.MeshStandardMaterial({ color: c.clone().multiplyScalar(0.3), roughness: 0.5 }))
+    brow.position.set(s * 0.022, 0.045, -0.055); headGroup.add(brow)
   }
-
-  headGroup.position.set(0, 0.28, 0.02)
+  
+  // Mouth
+  const mouth = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.003, 0.003), mouthMat)
+  mouth.position.set(0, 0.012, -0.058); headGroup.add(mouth)
+  
+  // Subtle blush
+  const blushMat = new THREE.MeshStandardMaterial({ color: 0xffa0a0, transparent: true, opacity: 0.3 })
+  for (let s = -1; s <= 1; s += 2) {
+    const bl = new THREE.Mesh(new THREE.SphereGeometry(0.012, 8, 8), blushMat)
+    bl.position.set(s * 0.028, 0.016, -0.055); bl.scale.set(1, 0.6, 0.3); headGroup.add(bl)
+  }
+  
+  headGroup.position.set(0, 0.28, 0.015)
   g.add(headGroup)
-
-  // Status glow ring
-  const statusRing = new THREE.Mesh(new THREE.RingGeometry(0.1, 0.12, 24), new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: 0.25, blending: THREE.AdditiveBlending, side: THREE.DoubleSide }))
-  statusRing.rotation.x = -Math.PI / 2; statusRing.position.set(0, 0.001, 0.01)
-  statusRing.userData.isStatusRing = true; g.add(statusRing)
-
-  g.children.forEach(function(ch) {
-    if (ch.isMesh && !ch.userData.isStatusRing) { ch.userData.isCore = true; ch.userData.isHuman = true }
-  })
-  g.userData.humanType = "seated"
+  
+  g.userData.humanType = 'seated'
   return g
-}
-
-// Standing human body for running animation
-function createStandingHumanBody(color) {
+}function createStandingHumanBody(color) {
   const g = new THREE.Group()
   const c = new THREE.Color(color)
+  
   const skinMat = new THREE.MeshStandardMaterial({ color: 0xf5d6c6, roughness: 0.3, metalness: 0 })
-  const clothMat = new THREE.MeshStandardMaterial({ color: c, roughness: 0.4, metalness: 0.1, emissive: c, emissiveIntensity: 0.03 })
-  const darkMat = new THREE.MeshStandardMaterial({ color: 0x3a3a4e, roughness: 0.5 })
+  const bodyMat = new THREE.MeshStandardMaterial({ color: c, roughness: 0.35, metalness: 0.08, emissive: c, emissiveIntensity: 0.02 })
+  const darkMat = new THREE.MeshStandardMaterial({ color: 0x3a3a50, roughness: 0.5 })
   const shoeMat = new THREE.MeshStandardMaterial({ color: 0x2a2a3e, roughness: 0.7 })
   const whiteMat = new THREE.MeshStandardMaterial({ color: 0xffffff })
   const pupilMat = new THREE.MeshStandardMaterial({ color: 0x222233 })
-  const blushMat = new THREE.MeshStandardMaterial({ color: 0xffaaaa, transparent: true, opacity: 0.35 })
-  const mouthMat = new THREE.MeshStandardMaterial({ color: 0xd47080 })
-  const hairColor = c.clone().multiplyScalar(0.7)
-  hairColor.r = Math.min(hairColor.r + 0.15, 1)
-  hairColor.g = Math.min(hairColor.g + 0.15, 1)
-  hairColor.b = Math.min(hairColor.b + 0.15, 1)
-  const hairMat = new THREE.MeshStandardMaterial({ color: hairColor, roughness: 0.7 })
-  const hairLightMat = new THREE.MeshStandardMaterial({ color: hairColor.clone().multiplyScalar(1.3), roughness: 0.7 })
-
-  // Body (torso)
-  const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.07, 0.14, 10), clothMat)
-  torso.position.set(0, 0.18, 0); torso.castShadow = true; g.add(torso)
-
-  // Neck
-  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.045, 0.04, 8), skinMat)
-  neck.position.set(0, 0.27, 0); g.add(neck)
-
-  // Head - same big cute head
-  const headGroup = new THREE.Group(); headGroup.userData.isHeadGroup = true
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.1, 16, 14), skinMat)
-  head.position.set(0, 0, 0); head.scale.set(1, 0.9, 0.88); head.castShadow = true; headGroup.add(head)
-  const hairBase = new THREE.Mesh(new THREE.SphereGeometry(0.105, 12, 10), hairMat)
-  hairBase.position.set(0, 0.325, 0.02); hairBase.scale.set(1.02, 0.38, 0.95); headGroup.add(hairBase)
-  for (let s = -1; s <= 1; s += 2) {
-    const sideHair = new THREE.Mesh(new THREE.BoxGeometry(0.025, 0.06, 0.02), hairMat)
-    sideHair.position.set(s * 0.095, 0.28, 0.01); sideHair.rotation.z = s * 0.15; headGroup.add(sideHair)
-  }
-  for (let i = 0; i < 5; i++) {
-    const bang = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.035, 0.012), i === 2 ? hairLightMat : hairMat)
-    bang.position.set((i - 2) * 0.022, 0.30, -0.065); bang.rotation.x = 0.25; headGroup.add(bang)
-  }
-  const tuft = new THREE.Mesh(new THREE.ConeGeometry(0.018, 0.035, 6), hairMat)
-  tuft.position.set(0, 0.355, 0.01); headGroup.add(tuft)
-  for (let s = -1; s <= 1; s += 2) {
-    const eyeWhite = new THREE.Mesh(new THREE.SphereGeometry(0.028, 10, 10), whiteMat)
-    eyeWhite.position.set(s * 0.032, 0.29, -0.075); eyeWhite.scale.set(1, 1.3, 0.35); headGroup.add(eyeWhite)
-    const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.018, 10, 10), pupilMat)
-    pupil.position.set(s * 0.032, 0.288, -0.088); headGroup.add(pupil)
-    const h1 = new THREE.Mesh(new THREE.SphereGeometry(0.007, 6, 6), whiteMat)
-    h1.position.set(s * 0.037, 0.294, -0.092); headGroup.add(h1)
-    const h2 = new THREE.Mesh(new THREE.SphereGeometry(0.004, 6, 6), whiteMat)
-    h2.position.set(s * 0.027, 0.284, -0.092); headGroup.add(h2)
-  }
-  for (let s = -1; s <= 1; s += 2) {
-    const blush = new THREE.Mesh(new THREE.SphereGeometry(0.018, 8, 8), blushMat)
-    blush.position.set(s * 0.045, 0.272, -0.065); blush.scale.set(1, 0.6, 0.4); headGroup.add(blush)
-  }
-  const mouth = new THREE.Mesh(new THREE.BoxGeometry(0.018, 0.003, 0.003), mouthMat)
-  mouth.position.set(0, 0.272, -0.082); headGroup.add(mouth)
-  for (let s = -1; s <= 1; s += 2) {
-    const brow = new THREE.Mesh(new THREE.BoxGeometry(0.018, 0.003, 0.003), hairMat)
-    brow.position.set(s * 0.032, 0.305, -0.082); headGroup.add(brow)
-  }
-  headGroup.position.set(0, 0.33, 0)
-  g.add(headGroup)
-
-  // Legs as pivots for running animation
-  const leftLegPivot = new THREE.Group(); leftLegPivot.name = "leftLegPivot"
-  const rightLegPivot = new THREE.Group(); rightLegPivot.name = "rightLegPivot"
+  const irisMat = new THREE.MeshStandardMaterial({ color: 0x5a8a5a, roughness: 0.1 })
+  const mouthMat = new THREE.MeshStandardMaterial({ color: 0xd4758b })
+  const hairMat = new THREE.MeshStandardMaterial({ color: c.clone().multiplyScalar(0.55), roughness: 0.6 })
+  const hairLightMat = new THREE.MeshStandardMaterial({ color: c.clone().multiplyScalar(0.7), roughness: 0.6 })
+  
+  // ---- LEGS ----
+  const leftLegPivot = new THREE.Group(); leftLegPivot.name = 'leftLegPivot'
+  const rightLegPivot = new THREE.Group(); rightLegPivot.name = 'rightLegPivot'
   for (let s = -1; s <= 1; s += 2) {
     const pivot = s < 0 ? leftLegPivot : rightLegPivot
-    pivot.position.set(s * 0.04, 0.10, 0)
-    const thigh = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.024, 0.09, 8), darkMat)
-    thigh.position.set(0, -0.045, 0); pivot.add(thigh)
-    const shin = new THREE.Mesh(new THREE.CylinderGeometry(0.024, 0.018, 0.07, 8), darkMat)
-    shin.position.set(0, -0.125, 0); pivot.add(shin)
-    const shoe = new THREE.Mesh(new THREE.BoxGeometry(0.028, 0.015, 0.04), shoeMat)
-    shoe.position.set(0, -0.167, 0.01); pivot.add(shoe)
+    const thigh = new THREE.Mesh(new THREE.CylinderGeometry(0.026, 0.022, 0.08, 8), darkMat)
+    thigh.position.set(0, -0.04, 0); pivot.add(thigh)
+    const shin = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.016, 0.07, 8), darkMat)
+    shin.position.set(0, -0.115, 0); pivot.add(shin)
+    const shoe = new THREE.Mesh(new THREE.BoxGeometry(0.026, 0.012, 0.04), shoeMat)
+    shoe.position.set(0, -0.155, 0.01); pivot.add(shoe)
+    pivot.position.set(s * 0.035, 0.12, 0)
   }
   g.add(leftLegPivot); g.add(rightLegPivot)
-
-  // Arms as pivots
-  const leftArmPivot = new THREE.Group(); leftArmPivot.name = "leftArmPivot"
-  const rightArmPivot = new THREE.Group(); rightArmPivot.name = "rightArmPivot"
+  
+  // ---- TORSO ----
+  const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.07, 0.18, 10), bodyMat)
+  torso.position.set(0, 0.19, 0); torso.castShadow = true; g.add(torso)
+  
+  // Collar
+  const collar = new THREE.Mesh(new THREE.TorusGeometry(0.055, 0.005, 6, 12), new THREE.MeshStandardMaterial({ color: 0xeeeeee, roughness: 0.2 }))
+  collar.position.set(0, 0.26, 0); collar.rotation.x = 0.1; collar.scale.set(1, 0.4, 0.5); g.add(collar)
+  
+  // ---- ARMS ----
+  const leftArmPivot = new THREE.Group(); leftArmPivot.name = 'leftArmPivot'
+  const rightArmPivot = new THREE.Group(); rightArmPivot.name = 'rightArmPivot'
   for (let s = -1; s <= 1; s += 2) {
     const pivot = s < 0 ? leftArmPivot : rightArmPivot
-    pivot.position.set(s * 0.09, 0.22, 0)
-    const upperArm = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.02, 0.08, 7), clothMat)
-    upperArm.position.set(0, -0.04, 0); pivot.add(upperArm)
-    const forearm = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.015, 0.07, 7), skinMat)
-    forearm.position.set(0, -0.115, 0); pivot.add(forearm)
-    const hand = new THREE.Mesh(new THREE.SphereGeometry(0.018, 6, 6), skinMat)
-    hand.position.set(0, -0.155, 0); pivot.add(hand)
+    const upper = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.016, 0.075, 7), bodyMat)
+    upper.position.set(0, -0.038, 0); pivot.add(upper)
+    const forearm = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.013, 0.065, 7), skinMat)
+    forearm.position.set(0, -0.10, 0); pivot.add(forearm)
+    const hand = new THREE.Mesh(new THREE.SphereGeometry(0.015, 6, 6), skinMat)
+    hand.position.set(0, -0.135, 0); pivot.add(hand)
+    pivot.position.set(s * 0.08, 0.24, 0)
   }
   g.add(leftArmPivot); g.add(rightArmPivot)
-
-  g.userData.humanType = "standing"
+  
+  // ---- NECK ----
+  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.04, 0.05, 8), skinMat)
+  neck.position.set(0, 0.28, 0); g.add(neck)
+  
+  // ---- HEAD ----
+  const headGroup = new THREE.Group()
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.055, 16, 14), skinMat)
+  head.scale.set(1, 0.9, 0.85); head.castShadow = true; headGroup.add(head)
+  
+  const hairMain = new THREE.Mesh(new THREE.SphereGeometry(0.078, 12, 10), hairMat)
+  hairMain.position.set(0, 0.06, 0.015); hairMain.scale.set(1.15, 0.7, 0.95); headGroup.add(hairMain)
+  
+  for (let i = 0; i < 7; i++) {
+    const bang = new THREE.Mesh(new THREE.BoxGeometry(0.015, 0.025, 0.01), i % 2 === 0 ? hairLightMat : hairMat)
+    bang.position.set((i - 3) * 0.016, 0.055, -0.052); bang.rotation.x = 0.4; bang.rotation.z = (i - 3) * 0.06; headGroup.add(bang)
+  }
+  
+  for (let s = -1; s <= 1; s += 2) {
+    const side = new THREE.Mesh(new THREE.BoxGeometry(0.015, 0.055, 0.02), hairLightMat)
+    side.position.set(s * 0.06, 0.02, 0.01); side.rotation.z = s * 0.15; headGroup.add(side)
+  }
+  
+  const top = new THREE.Mesh(new THREE.ConeGeometry(0.03, 0.03, 6), hairMat)
+  top.position.set(-0.01, 0.068, -0.01); top.rotation.x = -0.2; headGroup.add(top)
+  
+  // Eyes
+  for (let s = -1; s <= 1; s += 2) {
+    const ew = new THREE.Mesh(new THREE.SphereGeometry(0.022, 10, 10), whiteMat)
+    ew.position.set(s * 0.022, 0.03, -0.055); ew.scale.set(1, 1.1, 0.3); headGroup.add(ew)
+    const ir = new THREE.Mesh(new THREE.SphereGeometry(0.015, 10, 10), irisMat)
+    ir.position.set(s * 0.022, 0.028, -0.058); headGroup.add(ir)
+    const pu = new THREE.Mesh(new THREE.SphereGeometry(0.008, 8, 8), pupilMat)
+    pu.position.set(s * 0.022, 0.028, -0.06); headGroup.add(pu)
+    const hl = new THREE.Mesh(new THREE.SphereGeometry(0.005, 6, 6), new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 0.2 }))
+    hl.position.set(s * 0.026, 0.036, -0.06); headGroup.add(hl)
+  }
+  
+  // Eyebrows
+  for (let s = -1; s <= 1; s += 2) {
+    const brow = new THREE.Mesh(new THREE.BoxGeometry(0.016, 0.0025, 0.003), new THREE.MeshStandardMaterial({ color: c.clone().multiplyScalar(0.3), roughness: 0.5 }))
+    brow.position.set(s * 0.022, 0.045, -0.055); headGroup.add(brow)
+  }
+  
+  const mouth = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.003, 0.003), mouthMat)
+  mouth.position.set(0, 0.012, -0.058); headGroup.add(mouth)
+  
+  const blushMat = new THREE.MeshStandardMaterial({ color: 0xffa0a0, transparent: true, opacity: 0.3 })
+  for (let s = -1; s <= 1; s += 2) {
+    const bl = new THREE.Mesh(new THREE.SphereGeometry(0.012, 8, 8), blushMat)
+    bl.position.set(s * 0.028, 0.016, -0.055); bl.scale.set(1, 0.6, 0.3); headGroup.add(bl)
+  }
+  
+  headGroup.position.set(0, 0.36, 0)
+  g.add(headGroup)
+  
+  g.userData.humanType = 'standing'
   return g
 }
 
-// Role-specific accessories
 function createRoleAccessory(role, color) {
   const c = new THREE.Color(color)
   const g = new THREE.Group()
@@ -552,6 +538,310 @@ function createOfficePlant(pos, scale) {
   g.position.set(pos.x, 0, pos.z); return g
 }
 
+
+// ---- New: Desk decoration items ----
+function createDeskOrganizer() {
+  const g = new THREE.Group()
+  const phMat = new THREE.MeshStandardMaterial({ color: 0x3a3a5a, roughness: 0.6 })
+  const ph = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.018, 0.03, 8), phMat)
+  ph.position.set(-0.22, 0.015, 0.15); g.add(ph)
+  const penMat = new THREE.MeshStandardMaterial({ color: 0x4477cc, roughness: 0.3 })
+  for (let pn = 0; pn < 3; pn++) {
+    const pen = new THREE.Mesh(new THREE.CylinderGeometry(0.003, 0.002, 0.04, 5), penMat)
+    pen.position.set(-0.22 + pn * 0.006, 0.03, 0.15); g.add(pen)
+  }
+  const noteMat = new THREE.MeshStandardMaterial({ color: 0xffeebb, roughness: 0.7 })
+  const pad = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.004, 0.03), noteMat)
+  pad.position.set(-0.28, 0.002, 0.18); g.add(pad)
+  const frameMat = new THREE.MeshStandardMaterial({ color: 0x8b6b4a, roughness: 0.4, metalness: 0.2 })
+  const photoMat = new THREE.MeshStandardMaterial({ color: 0xaaccdd, roughness: 0.6 })
+  const frame = new THREE.Mesh(new THREE.BoxGeometry(0.025, 0.03, 0.005), frameMat)
+  frame.position.set(0.2, 0.015, 0.15); g.add(frame)
+  const photo = new THREE.Mesh(new THREE.PlaneGeometry(0.02, 0.025), photoMat)
+  photo.position.set(0.2, 0.015, 0.153); g.add(photo)
+  const lampBaseMat = new THREE.MeshStandardMaterial({ color: 0x2a2a3e, roughness: 0.3, metalness: 0.5 })
+  const lamp = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.025, 0.008, 8), lampBaseMat)
+  lamp.position.set(0.3, 0.005, -0.12); g.add(lamp)
+  const lampArm = new THREE.Mesh(new THREE.CylinderGeometry(0.004, 0.005, 0.06, 6), lampBaseMat)
+  lampArm.position.set(0.3, 0.03, -0.12); g.add(lampArm)
+  const lampHeadMat = new THREE.MeshStandardMaterial({ color: 0x3a3a5a, roughness: 0.3 })
+  const lampHead = new THREE.Mesh(new THREE.ConeGeometry(0.02, 0.015, 8), lampHeadMat)
+  lampHead.position.set(0.3, 0.065, -0.16); lampHead.rotation.x = 0.5; g.add(lampHead)
+  const lampGlowMat = new THREE.MeshBasicMaterial({ color: 0xffeecc, transparent: true, opacity: 0.06, blending: THREE.AdditiveBlending })
+  const lampGlow = new THREE.Mesh(new THREE.SphereGeometry(0.015, 6, 6), lampGlowMat)
+  lampGlow.position.set(0.3, 0.06, -0.17); g.add(lampGlow)
+  return g
+}
+
+function createDeskCalendar() {
+  const g = new THREE.Group()
+  const calMat = new THREE.MeshStandardMaterial({ color: 0xf0e8d8, roughness: 0.5 })
+  const cal = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.004, 0.025), calMat)
+  cal.position.set(-0.1, 0.003, -0.22); g.add(cal)
+  const calStand = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.008, 0.003), new THREE.MeshStandardMaterial({ color: 0x5a4a3a, roughness: 0.4 }))
+  calStand.position.set(-0.1, 0.006, -0.235); g.add(calStand)
+  const gridMat = new THREE.MeshBasicMaterial({ color: 0x444444, transparent: true, opacity: 0.3 })
+  for (let i = 0; i < 4; i++) {
+    const line = new THREE.Mesh(new THREE.PlaneGeometry(0.003, 0.004), gridMat)
+    line.position.set(-0.1 + (i - 1.5) * 0.007, 0.006, -0.22); g.add(line)
+  }
+  return g
+}
+
+function createDeskCoffeeCup(posOffset) {
+  const g = new THREE.Group()
+  const cupMat = new THREE.MeshStandardMaterial({ color: 0xeeeeee, roughness: 0.2 })
+  const cup = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.012, 0.025, 8), cupMat)
+  cup.position.set(posOffset[0], 0.015, posOffset[1]); g.add(cup)
+  const handleMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, roughness: 0.3 })
+  const handle = new THREE.Mesh(new THREE.TorusGeometry(0.008, 0.003, 5, 6), handleMat)
+  handle.position.set(posOffset[0] + 0.016, 0.015, posOffset[1]); handle.rotation.x = Math.PI / 2; g.add(handle)
+  const coffeeMat = new THREE.MeshStandardMaterial({ color: 0x6b3a1a, roughness: 0.8 })
+  const coffee = new THREE.Mesh(new THREE.CircleGeometry(0.012, 8), coffeeMat)
+  coffee.position.set(posOffset[0], 0.025, posOffset[1]); coffee.rotation.x = -Math.PI / 2; g.add(coffee)
+  const steamMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.08 })
+  const steam = new THREE.Mesh(new THREE.SphereGeometry(0.005, 4, 4), steamMat)
+  steam.position.set(posOffset[0], 0.035, posOffset[1]); g.add(steam)
+  return g
+}
+
+// ---- New: Whiteboard for meeting room ----
+function createWhiteboard() {
+  const g = new THREE.Group()
+  const wbMat = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.3, metalness: 0.05 })
+  const wb = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.6, 0.015), wbMat)
+  wb.position.set(3.2, 1.0, 4.0); g.add(wb)
+  const frameMat = new THREE.MeshStandardMaterial({ color: 0x5a5a6a, roughness: 0.4, metalness: 0.3 })
+  const fr = new THREE.Mesh(new THREE.BoxGeometry(1.02, 0.62, 0.02), frameMat)
+  fr.position.set(3.2, 1.0, 3.99); g.add(fr)
+  const markerMat = new THREE.MeshBasicMaterial({ color: 0x4488ff, transparent: true, opacity: 0.3 })
+  for (let i = 0; i < 5; i++) {
+    const ln = new THREE.Mesh(new THREE.PlaneGeometry(0.08 + Math.random() * 0.15, 0.003), markerMat)
+    ln.position.set(3.2 + (i - 2) * 0.14, 1.0 + (i % 3 - 1) * 0.1, 4.005); g.add(ln)
+  }
+  const markerMat2 = new THREE.MeshBasicMaterial({ color: 0xff6644, transparent: true, opacity: 0.25 })
+  const circle = new THREE.Mesh(new THREE.RingGeometry(0.04, 0.045, 12), markerMat2)
+  circle.position.set(3.55, 1.0, 4.005); circle.lookAt(3.55, 1.0, 5.0); g.add(circle)
+  const trayMat = new THREE.MeshStandardMaterial({ color: 0x3a3a4a, roughness: 0.4 })
+  const tray = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.005, 0.02), trayMat)
+  tray.position.set(3.2, 0.685, 3.99); g.add(tray)
+  const markers = [0xff4444, 0x44aaff, 0x44dd44, 0xffaa00]
+  markers.forEach((mc, mi) => {
+    const mk = new THREE.Mesh(new THREE.CylinderGeometry(0.003, 0.003, 0.015, 5), new THREE.MeshStandardMaterial({ color: mc, roughness: 0.4 }))
+    mk.position.set(3.2 + (mi - 1.5) * 0.03, 0.692, 3.99); g.add(mk)
+  })
+  return g
+}
+
+// ---- New: Projection screen ----
+function createProjectionScreen() {
+  const g = new THREE.Group()
+  const scrMat = new THREE.MeshStandardMaterial({ color: 0xe8e4dc, roughness: 0.6, metalness: 0.0, side: THREE.DoubleSide })
+  const scr = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 0.55), scrMat)
+  scr.position.set(3.2, 1.0, 6.0); g.add(scr)
+  const bMat = new THREE.MeshStandardMaterial({ color: 0x4a4a5a, roughness: 0.3, metalness: 0.2 })
+  const frame = new THREE.Mesh(new THREE.BoxGeometry(0.84, 0.010, 0.02), bMat)
+  frame.position.set(3.2, 0.7, 5.99); g.add(frame)
+  const projMat = new THREE.MeshStandardMaterial({ color: 0x2a2a3e, roughness: 0.2, metalness: 0.6 })
+  const proj = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.04, 0.08), projMat)
+  proj.position.set(3.2, 2.0, 5.2); g.add(proj)
+  const lensMat = new THREE.MeshStandardMaterial({ color: 0x444466, roughness: 0.1, metalness: 0.8 })
+  const lens = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.015, 0.015, 8), lensMat)
+  lens.position.set(3.2, 1.98, 5.3); g.add(lens)
+  return g
+}
+
+// ---- New: Break area equipment ----
+function createCoffeeMachine(pos) {
+  const g = new THREE.Group()
+  const bMat = new THREE.MeshStandardMaterial({ color: 0x2a2a3e, roughness: 0.2, metalness: 0.7 })
+  const body = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.2, 0.12), bMat)
+  body.position.set(pos[0], 0.1, pos[1]); g.add(body)
+  const frontMat = new THREE.MeshStandardMaterial({ color: 0x1a1a2e, roughness: 0.3 })
+  const front = new THREE.Mesh(new THREE.PlaneGeometry(0.10, 0.18), frontMat)
+  front.position.set(pos[0], 0.1, pos[1] + 0.061); g.add(front)
+  const tankMat = new THREE.MeshStandardMaterial({ color: 0x88bbee, transparent: true, opacity: 0.3, roughness: 0.1 })
+  const tank = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.12, 0.04), tankMat)
+  tank.position.set(pos[0], 0.14, pos[1] - 0.06); g.add(tank)
+  const dripMat = new THREE.MeshStandardMaterial({ color: 0x3a3a4e, roughness: 0.3 })
+  const drip = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.008, 0.04), dripMat)
+  drip.position.set(pos[0], 0.06, pos[1] + 0.03); g.add(drip)
+  const cupM = new THREE.MeshStandardMaterial({ color: 0xeeeeee, roughness: 0.3 })
+  const cc = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.01, 0.015, 8), cupM)
+  cc.position.set(pos[0], 0.03, pos[1] + 0.03); g.add(cc)
+  const ledMat = new THREE.MeshStandardMaterial({ color: 0x00ff88, emissive: 0x00ff88, emissiveIntensity: 0.5 })
+  const led = new THREE.Mesh(new THREE.CircleGeometry(0.004, 6), ledMat)
+  led.position.set(pos[0] + 0.04, 0.16, pos[1] + 0.062); g.add(led)
+  return g
+}
+
+function createWaterDispenser(pos) {
+  const g = new THREE.Group()
+  const bMat = new THREE.MeshStandardMaterial({ color: 0xeeeeee, roughness: 0.2 })
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.07, 0.22, 10), bMat)
+  body.position.set(pos[0], 0.11, pos[1]); g.add(body)
+  const topMat = new THREE.MeshStandardMaterial({ color: 0x88bbdd, transparent: true, opacity: 0.35, roughness: 0.1 })
+  const top = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.055, 0.12, 10), topMat)
+  top.position.set(pos[0], 0.24, pos[1]); g.add(top)
+  const faucetMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.6, roughness: 0.2 })
+  const faucet = new THREE.Mesh(new THREE.BoxGeometry(0.015, 0.01, 0.025), faucetMat)
+  faucet.position.set(pos[0], 0.18, pos[1] + 0.055); g.add(faucet)
+  const btnMat = new THREE.MeshStandardMaterial({ color: 0xff4444, roughness: 0.3 })
+  const btn = new THREE.Mesh(new THREE.CircleGeometry(0.005, 6), btnMat)
+  btn.position.set(pos[0] - 0.02, 0.12, pos[1] + 0.065); g.add(btn)
+  const btn2 = new THREE.Mesh(new THREE.CircleGeometry(0.005, 6), new THREE.MeshStandardMaterial({ color: 0x4488ff, roughness: 0.3 }))
+  btn2.position.set(pos[0] + 0.02, 0.12, pos[1] + 0.065); g.add(btn2)
+  const dt = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.004, 0.03), new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 0.3 }))
+  dt.position.set(pos[0], 0.035, pos[1] + 0.065); g.add(dt)
+  return g
+}
+
+function createMicrowave(pos) {
+  const g = new THREE.Group()
+  const bMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.2, metalness: 0.4 })
+  const body = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.12, 0.16), bMat)
+  body.position.set(pos[0], 0.06, pos[1]); g.add(body)
+  const doorMat = new THREE.MeshStandardMaterial({ color: 0x3a3a4a, roughness: 0.2, metalness: 0.6 })
+  const door = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.08, 0.005), doorMat)
+  door.position.set(pos[0], 0.06, pos[1] + 0.083); g.add(door)
+  const winMat = new THREE.MeshStandardMaterial({ color: 0x1a1a2e, roughness: 0.1 })
+  const win = new THREE.Mesh(new THREE.PlaneGeometry(0.06, 0.04), winMat)
+  win.position.set(pos[0], 0.06, pos[1] + 0.086); g.add(win)
+  const cpMat = new THREE.MeshStandardMaterial({ color: 0x2a2a3e, roughness: 0.3 })
+  const cp = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.02, 0.002), cpMat)
+  cp.position.set(pos[0] + 0.04, 0.09, pos[1] + 0.086); g.add(cp)
+  const digMat = new THREE.MeshBasicMaterial({ color: 0x00ff44, transparent: true, opacity: 0.4 })
+  for (let d = 0; d < 4; d++) {
+    const dig = new THREE.Mesh(new THREE.PlaneGeometry(0.004, 0.008), digMat)
+    dig.position.set(pos[0] + 0.035 + d * 0.007, 0.09, pos[1] + 0.088); g.add(dig)
+  }
+  return g
+}
+
+// ---- New: Vending machine (corner) ----
+function createVendingMachine(pos) {
+  const g = new THREE.Group()
+  const bMat = new THREE.MeshStandardMaterial({ color: 0x446688, roughness: 0.3, metalness: 0.3 })
+  const body = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.5, 0.2), bMat)
+  body.position.set(pos[0], 0.3, pos[1]); g.add(body)
+  const glMat = new THREE.MeshStandardMaterial({ color: 0x88bbdd, transparent: true, opacity: 0.2, roughness: 0.1 })
+  const gf = new THREE.Mesh(new THREE.PlaneGeometry(0.26, 0.35), glMat)
+  gf.position.set(pos[0], 0.28, pos[1] + 0.101); g.add(gf)
+  const itemColors = [0xff6644, 0x44aaff, 0x44dd44, 0xffaa44, 0xff4488]
+  for (let row = 0; row < 3; row++) {
+    for (let col = 0; col < 4; col++) {
+      const im = new THREE.MeshStandardMaterial({ color: itemColors[(row + col) % itemColors.length], roughness: 0.5 })
+      const item = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.04, 0.02), im)
+      item.position.set(pos[0] - 0.08 + col * 0.055, 0.1 + row * 0.12, pos[1] + 0.1); g.add(item)
+    }
+  }
+  const btnMat = new THREE.MeshStandardMaterial({ color: 0x4488ff, roughness: 0.3 })
+  for (let i = 0; i < 6; i++) {
+    const btn = new THREE.Mesh(new THREE.CircleGeometry(0.004, 6), btnMat)
+    btn.position.set(pos[0] + 0.12, 0.1 + i * 0.06, pos[1] + 0.101); g.add(btn)
+  }
+  const slotMat = new THREE.MeshStandardMaterial({ color: 0x222233, metalness: 0.8, roughness: 0.2 })
+  const slot = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.008, 0.003), slotMat)
+  slot.position.set(pos[0] + 0.12, 0.46, pos[1] + 0.101); g.add(slot)
+  return g
+}
+
+// ---- New: Bulletin board ----
+function createBulletinBoard(pos) {
+  const g = new THREE.Group()
+  const bMat = new THREE.MeshStandardMaterial({ color: 0xd4c8b0, roughness: 0.6 })
+  const board = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.35, 0.015), bMat)
+  board.position.set(pos[0], pos[1], pos[2]); g.add(board)
+  const lineMat = new THREE.MeshBasicMaterial({ color: 0xbbb5a0, transparent: true, opacity: 0.1 })
+  for (let i = 0; i < 5; i++) {
+    const hl = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.002), lineMat)
+    hl.position.set(pos[0], pos[1] - 0.12 + i * 0.06, pos[2] + 0.008); g.add(hl)
+  }
+  const noteColors = [0xffeecc, 0xddffcc, 0xffddcc, 0xccddff, 0xffccdd]
+  for (let i = 0; i < 5; i++) {
+    const nm = new THREE.MeshStandardMaterial({ color: noteColors[i], roughness: 0.7 })
+    const n = new THREE.Mesh(new THREE.BoxGeometry(0.04 + Math.random() * 0.03, 0.03 + Math.random() * 0.02, 0.002), nm)
+    n.position.set(pos[0] - 0.16 + (i % 3) * 0.15, pos[1] + 0.08 - Math.floor(i / 3) * 0.12, pos[2] + 0.009)
+    n.rotation.z = (Math.random() - 0.5) * 0.08; g.add(n)
+    const pinMat = new THREE.MeshStandardMaterial({ color: 0xff4444, metalness: 0.3 })
+    const pin = new THREE.Mesh(new THREE.SphereGeometry(0.003, 4, 4), pinMat)
+    pin.position.set(pos[0] - 0.16 + (i % 3) * 0.15, pos[1] + 0.08 - Math.floor(i / 3) * 0.12, pos[2] + 0.012); g.add(pin)
+  }
+  return { group: g, labelText: "NOTICE" }
+}
+
+// ---- New: Wall clock ----
+function createWallClock(pos) {
+  const g = new THREE.Group()
+  const faceMat = new THREE.MeshStandardMaterial({ color: 0xf5f0e8, roughness: 0.3 })
+  const face = new THREE.Mesh(new THREE.CircleGeometry(0.07, 16), faceMat)
+  face.position.set(pos[0], pos[1], pos[2]); g.add(face)
+  const rimMat = new THREE.MeshStandardMaterial({ color: 0x5a4a3a, roughness: 0.2, metalness: 0.3 })
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(0.07, 0.005, 8, 16), rimMat)
+  rim.position.set(pos[0], pos[1], pos[2] - 0.001); g.add(rim)
+  const markMat = new THREE.MeshBasicMaterial({ color: 0x333333 })
+  for (let h = 0; h < 12; h++) {
+    const a = (h / 12) * Math.PI * 2 - Math.PI / 2
+    const mk = new THREE.Mesh(new THREE.PlaneGeometry(0.003, 0.008), markMat)
+    mk.position.set(pos[0] + Math.cos(a) * 0.055, pos[1] + Math.sin(a) * 0.055, pos[2] - 0.002); g.add(mk)
+  }
+  const handMat = new THREE.MeshBasicMaterial({ color: 0x222222 })
+  const minHand = new THREE.Mesh(new THREE.PlaneGeometry(0.002, 0.04), handMat)
+  minHand.position.set(pos[0], pos[1] + 0.02, pos[2] - 0.002); g.add(minHand)
+  const hrHand = new THREE.Mesh(new THREE.PlaneGeometry(0.002, 0.025), handMat)
+  hrHand.position.set(pos[0] + 0.008, pos[1] + 0.01, pos[2] - 0.002); hrHand.rotation.z = 0.5; g.add(hrHand)
+  const dotMat = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.5 })
+  const dot = new THREE.Mesh(new THREE.SphereGeometry(0.003, 6, 6), dotMat)
+  dot.position.set(pos[0], pos[1], pos[2] - 0.002); g.add(dot)
+  return g
+}
+
+// ---- New: Coat rack ----
+function createCoatRack(pos) {
+  const g = new THREE.Group()
+  const rMat = new THREE.MeshStandardMaterial({ color: 0x8b7d6b, roughness: 0.5, metalness: 0.2 })
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.015, 0.25, 8), rMat)
+  pole.position.set(pos[0], 0.125, pos[1]); g.add(pole)
+  const baseMat = new THREE.MeshStandardMaterial({ color: 0x6b5d4f, roughness: 0.4, metalness: 0.3 })
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.06, 0.015, 8), baseMat)
+  base.position.set(pos[0], 0.008, pos[1]); g.add(base)
+  for (let i = 0; i < 3; i++) {
+    const a = (i / 3) * Math.PI * 2
+    const hook = new THREE.Mesh(new THREE.CylinderGeometry(0.003, 0.004, 0.02, 4), rMat)
+    hook.position.set(pos[0] + Math.cos(a) * 0.015, 0.24, pos[1] + Math.sin(a) * 0.015)
+    hook.rotation.z = Math.PI / 2 + a * 0.5; g.add(hook)
+  }
+  return g
+}
+
+// ---- New: Filing cabinet ----
+function createFilingCabinet(pos) {
+  const g = new THREE.Group()
+  const cMat = new THREE.MeshStandardMaterial({ color: 0x7a7a8a, roughness: 0.3, metalness: 0.5 })
+  const body = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.3, 0.14), cMat)
+  body.position.set(pos[0], 0.15, pos[1]); g.add(body)
+  const drawMat = new THREE.MeshStandardMaterial({ color: 0x6a6a7a, roughness: 0.3, metalness: 0.4 })
+  for (let i = 0; i < 3; i++) {
+    const dr = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.06, 0.003), drawMat)
+    dr.position.set(pos[0], 0.05 + i * 0.08, pos[1] + 0.072); g.add(dr)
+    const hdl = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.003, 0.005), new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.6 }))
+    hdl.position.set(pos[0], 0.05 + i * 0.08, pos[1] + 0.075); g.add(hdl)
+  }
+  return g
+}
+
+// ---- New: Desk drawer unit ----
+function createDrawerUnit(pos) {
+  const g = new THREE.Group()
+  const cMat = new THREE.MeshStandardMaterial({ color: 0x8a7d6a, roughness: 0.4, metalness: 0.1 })
+  const body = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.12, 0.08), cMat)
+  body.position.set(pos[0], 0.06, pos[1]); g.add(body)
+  for (let i = 0; i < 3; i++) {
+    const d = new THREE.Mesh(new THREE.BoxGeometry(0.065, 0.025, 0.002), new THREE.MeshStandardMaterial({ color: 0x7a6d5a, roughness: 0.5 }))
+    d.position.set(pos[0], 0.02 + i * 0.035, pos[1] + 0.041); g.add(d)
+  }
+  return g
+}
 function createDeskWithCubicle(dp) {
   const g = new THREE.Group()
   const x = dp.x, z = dp.z
@@ -723,6 +1013,14 @@ function initScene() {
   mDiv.style.cssText = "font-size:10px;font-weight:600;color:rgba(108,92,231,0.4)"
   const mLbl = new CSS2DObject(mDiv); mLbl.position.set(3.2, 0.1, 4.4); scene.add(mLbl)
 
+  // Enhanced: Whiteboard
+  const wBoard = createWhiteboard()
+  scene.add(wBoard)
+  // Enhanced: Projection screen and ceiling projector
+  const pScreen = createProjectionScreen()
+  scene.add(pScreen)
+
+
   // Break area (back left)
   const sofaMat = new THREE.MeshStandardMaterial({ color: 0x8b7d6b, roughness: 0.8 })
   const ss = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.06, 0.3), sofaMat)
@@ -730,6 +1028,24 @@ function initScene() {
   const sb = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.12, 0.06), sofaMat)
   sb.position.set(-3.2, 0.11, 5.95); scene.add(sb)
   const ct = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.2, 0.04, 12), new THREE.MeshStandardMaterial({ color: 0x7a6b5a, roughness: 0.4, metalness: 0.2 }))
+  ct.position.set(-3.2, 0.02, 5.3); scene.add(ct)
+
+  // Enhanced: Coffee machine
+  scene.add(createCoffeeMachine([-2.5, 5.8]))
+  // Water dispenser
+  scene.add(createWaterDispenser([-4.2, 5.8]))
+  // Microwave
+  scene.add(createMicrowave([-1.8, 5.8]))
+  // Coat rack near break area
+  scene.add(createCoatRack([-4.2, 4.5]))
+  // Vending machine (back right corner)
+  scene.add(createVendingMachine([4.5, 4.0]))
+
+  // Bulletin board on back wall
+  const bb = createBulletinBoard([3.5, 1.4, -3.0])
+  scene.add(bb.group)
+  // Wall clock above reception
+  scene.add(createWallClock([-4.5, 2.0, 5.5]))
   ct.position.set(-3.2, 0.02, 5.3); scene.add(ct)
 
   // Plants
@@ -747,7 +1063,15 @@ function initScene() {
     glow.position.set(fp[0], 2.18, fp[1]); scene.add(glow)
   }
 
-  // Create workstations with agents
+  
+
+  // Filing cabinet near workstation area
+  scene.add(createFilingCabinet([-2.8, -0.5]))
+  scene.add(createFilingCabinet([2.8, -0.5]))
+  // Drawer units
+  scene.add(createDrawerUnit([-1.5, -1.3]))
+  scene.add(createDrawerUnit([1.5, -1.3]))
+// Create workstations with agents
   DESK_POSITIONS.forEach(function(dp) {
     const x = dp.x, z = dp.z, agColor = new THREE.Color(AGENT_COLORS[dp.role])
     scene.add(createDeskWithCubicle(dp))
@@ -761,11 +1085,11 @@ function initScene() {
     // Seated body
     const seatedBody = createSeatedHumanBody(AGENT_COLORS[dp.role])
     seatedBody.userData.bodyVariant = "seated"
-    seatedBody.scale.setScalar(0.65); seatedBody.position.set(0, 0.05, -0.08); seatedBody.rotation.y = Math.PI; group.add(seatedBody)
+    seatedBody.scale.setScalar(0.65); seatedBody.position.set(0, 0.05, 0.15); group.add(seatedBody)
     // Standing body (hidden by default)
     const standingBody = createStandingHumanBody(AGENT_COLORS[dp.role])
     standingBody.userData.bodyVariant = "standing"
-    standingBody.scale.setScalar(0.65); standingBody.position.set(0, 0.05, -0.08); standingBody.rotation.y = Math.PI; standingBody.visible = false; group.add(standingBody)
+    standingBody.scale.setScalar(0.65); standingBody.position.set(0, 0.05, 0.15); standingBody.visible = false; group.add(standingBody)
     // Accessories
     const accessory = createRoleAccessory(dp.role, AGENT_COLORS[dp.role])
     seatedBody.add(accessory)
@@ -788,6 +1112,11 @@ function initScene() {
       particleGroup.add(pt)
     }
     group.add(particleGroup)
+
+    // Desk decorations on each desk
+    group.add(createDeskOrganizer())
+    group.add(createDeskCalendar())
+    group.add(createDeskCoffeeCup([0.38, 0.22]))
 
     const sr = new THREE.Mesh(new THREE.RingGeometry(0.35, 0.42, 24), new THREE.MeshBasicMaterial({ color: agColor, transparent: true, opacity: 0, side: THREE.DoubleSide, blending: THREE.AdditiveBlending }))
     sr.rotation.x = -Math.PI / 2; sr.position.y = -0.02; sr.userData.isStatusRing = true; group.add(sr)
@@ -1021,8 +1350,3 @@ defineExpose({
 :deep(.label-speech) { background: rgba(255,255,255,0.9); backdrop-filter: blur(12px); border: 1px solid rgba(0,0,0,0.08); border-radius: 10px; padding: 5px 12px; font-size: 12px; color: #2a2620; max-width: 200px; pointer-events: none; white-space: nowrap; box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
 :deep(.label-3d) { pointer-events: none; user-select: none; }
 </style>
-
-
-
-
-
